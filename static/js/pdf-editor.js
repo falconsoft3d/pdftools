@@ -1645,6 +1645,25 @@ FECHA: 06 / 09 / 2026
   * [SI] Bloquear cuenta por 15 minutos
   * [NO] Mostrar mensaje "Credenciales incorrectas"
 - [FIN] Fin del Proceso`;
+        } else if (type === 'signatures-list' || type === 'signatures') {
+            return `# HOJA DE FIRMAS Y REGISTRO DE ASISTENCIA
+ESTILO: 1
+TITULO: REGISTRO OFICIAL DE ASISTENCIA
+EVENTO: Taller de Formación y Seguridad Laboral 2026
+ORGANIZADOR: Falcon Tech Solutions S.L.
+FECHA: 06 / 09 / 2026
+LUGAR: Sala de Conferencias Principal
+
+## PARTICIPANTES / ASISTENTES
+| Nombre y Apellidos | DNI / NIF | Cargo / Empresa | Firma |
+| Juan Pérez Gómez | 12345678A | Técnico Senior | Firmado |
+| María López Fernández | 87654321B | Supervisora | Firmado |
+| Carlos Ruiz Martínez | 45678912C | Ingeniero Dev | Pendiente |
+| Ana García Sánchez | 78912345D | Consultora UX | Firmado |
+| Pedro Ramírez Ortiz | 32165498E | Director Proyecto | Firmado |
+| Elena Torres Vega | 65498732F | Especialista QA | Pendiente |
+| Gonzalo Maza Blanco | 98765432G | Analista de Datos | Firmado |
+| Sofía Castro Méndez | 15975346H | Coordinadora | Pendiente |`;
         } else {
             return this.getDefaultMarkdownSample();
         }
@@ -5116,6 +5135,234 @@ FECHA: 06 / 09 / 2026
         }
     }
 
+    async createSignaturesListTemplate(mdText, isSilent = false) {
+        showToast('Generando Hoja de Firmas / Registro de Asistencia...', 'info', isSilent);
+        try {
+            const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            const page = doc.addPage([595.28, 841.89]); // A4 Portrait
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+            const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+
+            const W = 595.28;
+            const H = 841.89;
+
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
+            const titulo = this.getMdVal(mdText, 'TITULO|HEADER', 'REGISTRO OFICIAL DE ASISTENCIA');
+            const evento = this.getMdVal(mdText, 'EVENTO|PROYECTO', 'Taller de Formación y Seguridad Laboral 2026');
+            const organizador = this.getMdVal(mdText, 'ORGANIZADOR|EMPRESA', 'Falcon Tech Solutions S.L.');
+            const fecha = this.getMdVal(mdText, 'FECHA', new Date().toLocaleDateString('es-ES'));
+            const lugar = this.getMdVal(mdText, 'LUGAR|SALA', 'Sala de Conferencias Principal');
+
+            // Top Header Bar
+            page.drawRectangle({
+                x: 35,
+                y: H - 95,
+                width: W - 70,
+                height: 65,
+                color: theme.headerBg
+            });
+
+            page.drawText('HOJA DE FIRMAS Y REGISTRO DE ASISTENCIA', {
+                x: 50,
+                y: H - 52,
+                size: 9.5,
+                font: fontBold,
+                color: theme.primary
+            });
+
+            page.drawText(titulo, {
+                x: 50,
+                y: H - 75,
+                size: 14,
+                font: fontBold,
+                color: rgb(1, 1, 1)
+            });
+
+            page.drawText(`ORGANIZADOR: ${organizador}`, { x: W - 260, y: H - 52, size: 8.5, font: fontBold, color: theme.primary });
+            page.drawText(`FECHA: ${fecha}  |  LUGAR: ${lugar}`, { x: W - 260, y: H - 72, size: 8, font: fontReg, color: rgb(0.85, 0.9, 0.98) });
+
+            // Event Details Card
+            page.drawRectangle({
+                x: 35,
+                y: H - 130,
+                width: W - 70,
+                height: 25,
+                color: theme.bg,
+                borderColor: theme.border,
+                borderWidth: 1
+            });
+
+            page.drawText(`EVENTO / CURSO: ${evento}`, { x: 45, y: H - 118, size: 9, font: fontBold, color: theme.textDark });
+
+            // Table Header
+            const tableY = H - 160;
+            const tableW = W - 70;
+            const headerH = 22;
+
+            page.drawRectangle({
+                x: 35,
+                y: tableY - headerH,
+                width: tableW,
+                height: headerH,
+                color: rgb(0.92, 0.94, 0.98),
+                borderColor: rgb(0.8, 0.84, 0.92),
+                borderWidth: 1
+            });
+
+            page.drawText('Nº', { x: 42, y: tableY - 15, size: 8.5, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+            page.drawText('NOMBRE Y APELLIDOS', { x: 68, y: tableY - 15, size: 8.5, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+            page.drawText('DNI / NIF', { x: 235, y: tableY - 15, size: 8.5, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+            page.drawText('CARGO / EMPRESA', { x: 320, y: tableY - 15, size: 8.5, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+            page.drawText('FIRMA Y CONFORMIDAD', { x: 440, y: tableY - 15, size: 8.5, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+
+            // Parse Participants from Markdown
+            const participants = [];
+            if (mdText) {
+                const lines = mdText.split('\n');
+                lines.forEach(line => {
+                    if (line.includes('|') && !line.includes('---') && !line.toLowerCase().includes('apellidos') && !line.toLowerCase().includes('nombre')) {
+                        const parts = line.split('|').map(p => p.trim()).filter(p => p.length > 0);
+                        if (parts.length >= 1) {
+                            participants.push({
+                                name: parts[0] || 'Nombre participante',
+                                dni: parts[1] || '-----------',
+                                cargo: parts[2] || 'Asistente',
+                                estado: parts[3] || 'Pendiente'
+                            });
+                        }
+                    } else if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
+                        const raw = line.trim().replace(/^[-*]\s+/, '').trim();
+                        const parts = raw.split('|').map(p => p.trim());
+                        if (parts.length >= 1) {
+                            participants.push({
+                                name: parts[0] || raw,
+                                dni: parts[1] || '-----------',
+                                cargo: parts[2] || 'Asistente',
+                                estado: parts[3] || 'Pendiente'
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Fallback participants
+            if (participants.length === 0) {
+                for (let i = 1; i <= 8; i++) {
+                    participants.push({
+                        name: `Participante Nombre y Apellidos #${i}`,
+                        dni: `1234567${i}A`,
+                        cargo: 'Empresa / Cargo',
+                        estado: i % 2 === 0 ? 'Firmado' : 'Pendiente'
+                    });
+                }
+            }
+
+            let rowY = tableY - headerH - 35;
+            const rowH = 36;
+
+            participants.forEach((p, idx) => {
+                if (rowY < 100) return;
+
+                const isEven = idx % 2 === 0;
+
+                // Row Outer Box
+                page.drawRectangle({
+                    x: 35,
+                    y: rowY,
+                    width: tableW,
+                    height: rowH,
+                    color: isEven ? rgb(0.98, 0.99, 1) : rgb(1, 1, 1),
+                    borderColor: rgb(0.88, 0.9, 0.94),
+                    borderWidth: 0.8
+                });
+
+                // Row Text
+                page.drawText(`${idx + 1}`, { x: 42, y: rowY + 12, size: 8.5, font: fontBold, color: theme.primary });
+                page.drawText(p.name, { x: 68, y: rowY + 12, size: 9, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+                page.drawText(p.dni, { x: 235, y: rowY + 12, size: 8.5, font: fontReg, color: rgb(0.3, 0.35, 0.45) });
+                page.drawText(p.cargo, { x: 320, y: rowY + 12, size: 8.5, font: fontReg, color: rgb(0.3, 0.35, 0.45) });
+
+                // Dedicated Signature Box
+                const sigBoxW = 120;
+                const sigBoxH = 28;
+                const sigBoxX = W - 35 - sigBoxW - 5;
+                const sigBoxY = rowY + 4;
+
+                const isSigned = p.estado.toLowerCase().includes('firma') || p.estado.toLowerCase().includes('registrado') || p.estado.toLowerCase().includes('ok');
+
+                page.drawRectangle({
+                    x: sigBoxX,
+                    y: sigBoxY,
+                    width: sigBoxW,
+                    height: sigBoxH,
+                    color: rgb(1, 1, 1),
+                    borderColor: isSigned ? rgb(0.05, 0.65, 0.41) : rgb(0.75, 0.8, 0.88),
+                    borderWidth: isSigned ? 1.2 : 0.8
+                });
+
+                // Bottom signature line inside box
+                page.drawLine({
+                    start: { x: sigBoxX + 10, y: sigBoxY + 6 },
+                    end: { x: sigBoxX + sigBoxW - 10, y: sigBoxY + 6 },
+                    thickness: 0.5,
+                    color: rgb(0.75, 0.8, 0.88)
+                });
+
+                if (isSigned) {
+                    page.drawText('REGISTRADO / FIRMA', {
+                        x: sigBoxX + 12,
+                        y: sigBoxY + 11,
+                        size: 7.5,
+                        font: fontBold,
+                        color: rgb(0.05, 0.65, 0.41)
+                    });
+                } else {
+                    page.drawText('Firma del asistente', {
+                        x: sigBoxX + 22,
+                        y: sigBoxY + 10,
+                        size: 7,
+                        font: fontReg,
+                        color: rgb(0.65, 0.7, 0.78)
+                    });
+                }
+
+                rowY -= (rowH + 4);
+            });
+
+            // Footer Certification Box
+            page.drawRectangle({
+                x: 35,
+                y: 35,
+                width: W - 70,
+                height: 55,
+                color: rgb(0.96, 0.97, 0.99),
+                borderColor: rgb(0.85, 0.88, 0.92),
+                borderWidth: 1
+            });
+
+            page.drawText(`CERTIFICACION: Se acredita la asistencia de los ${participants.length} participantes registrados en esta hoja oficial.`, {
+                x: 48,
+                y: 68,
+                size: 8,
+                font: fontReg,
+                color: rgb(0.3, 0.35, 0.45)
+            });
+
+            page.drawLine({ start: { x: W - 200, y: 52 }, end: { x: W - 50, y: 52 }, thickness: 1, color: rgb(0.6, 0.65, 0.75) });
+            page.drawText('Firma del Organizador / Responsable', { x: W - 190, y: 41, size: 7.5, font: fontReg, color: rgb(0.4, 0.45, 0.55) });
+
+            const bytes = await doc.save();
+            await this.loadPDFBytes(bytes, 'hoja_firmas_asistencia.pdf');
+            showToast('Hoja de Firmas y Registro de Asistencia generada correctamente desde Markdown.', 'success', isSilent);
+        } catch (err) {
+            console.error('Error al generar hoja de firmas:', err);
+            showToast('Error al generar la Hoja de Firmas.', 'danger');
+        }
+    }
+
     initMarkdownModal() {
         const modal = document.getElementById('markdown-modal');
         const openHeaderBtn = document.getElementById('btn-open-markdown-modal');
@@ -5571,6 +5818,9 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
             return;
         } else if (templateType === 'code-flowchart' || templateType === 'flowchart') {
             await this.createCodeFlowchartTemplate(mdText, isSilent);
+            return;
+        } else if (templateType === 'signatures-list' || templateType === 'signatures') {
+            await this.createSignaturesListTemplate(mdText, isSilent);
             return;
         }
 
