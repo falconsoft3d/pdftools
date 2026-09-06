@@ -1525,6 +1525,72 @@ DURACION: 12 Semanas
 | 4. Integración de Plantillas y Markdown | Dev Team | S6 | S10 | 85% |
 | 5. Pruebas de Rendimiento e Integración | QA Team | S8 | S11 | 50% |
 | 6. Despliegue Producción en Nginx con SSL | DevOps | S10 | S12 | 20% |`;
+        } else if (type === 'budget-quote' || type === 'quote') {
+            return `# PRESUPUESTO / PROPUESTA COMERCIAL
+ESTILO: 1
+NUMERO: PRE-2026-001
+FECHA: 06 / 09 / 2026
+VALIDEZ: 30 Días
+EMISOR: Falcon Tech Solutions S.L.\\nNIF: B-12345678\\nCalle Mayor 100, Madrid\\ncontacto@empresa.com
+CLIENTE: Empresa Cliente S.A.\\nNIF: A-87654321\\nAv. Gran Vía 45, Barcelona\\nproyectos@cliente.com
+
+## DESGLOSE DE SERVICIOS
+| Concepto / Servicio | Cantidad | Precio Unit. | Subtotal |
+| Desarrollo de Aplicación Web Local | 1 | 1,200.00 | 1,200.00 |
+| Diseño de Plantillas e Integración Markdown | 1 | 450.00 | 450.00 |
+| Configuración de Servidor Nginx & Docker | 1 | 350.00 | 350.00 |
+
+SUBTOTAL: 2,000.00 EUR
+IVA: 420.00 EUR
+TOTAL: 2,420.00 EUR
+
+CONDICIONES: Forma de pago 50% al inicio y 50% contra entrega. Incluye 3 meses de soporte técnico e instalación local.`;
+        } else if (type === 'meeting-summary' || type === 'meeting') {
+            return `# RESUMEN DE REUNION / ACTA
+ESTILO: 1
+TITULO: Reunión de Planificación y Seguimiento Q3
+FECHA: 06 / 09 / 2026
+HORA: 10:00 - 11:30 h
+LUGAR: Sala de Juntas / Google Meet
+ORGANIZADOR: Marlon Falcón Hernández
+ASISTENTES: Marlon Falcón, Laura Gómez (Product), Carlos Ruiz (Dev), Ana Martínez (Design)
+OBJETIVO: Revisar avances del trimestre Q3 y definir la hoja de ruta para la versión 2.0.
+
+## PUNTOS TRATADOS
+- Revisión del rendimiento del editor PDF y carga de plantillas locales.
+- Evaluación del nuevo sistema de edición side-by-side con Markdown en tiempo real.
+- Planificación del despliegue en servidor privado Nginx con certificado SSL.
+
+## ACUERDOS ALCANZADOS
+- Se aprueba la integración de 18 plantillas interactivas editables por Markdown.
+- Se mantendrá el enfoque 100% local garantizando cero dependencia de servidores en la nube.
+- La versión final de producción se publicará la próxima semana.
+
+## PROXIMOS PASOS & COMPROMISOS
+- Marlon Falcón: Finalizar pruebas de integración de plantillas avanzadas.
+- Carlos Ruiz: Optimizar tiempos de respuesta y empaquetado Docker.
+- Laura Gómez: Preparar documentación y guía de usuario final.`;
+        } else if (type === 'project-goals' || type === 'goals') {
+            return `# OBJETIVOS DEL PROYECTO
+ESTILO: 1
+NOMBRE_PROYECTO: Plataforma PDF Local Editor 2026
+CODIGO: PRJ-2026-V1
+RESPONSABLE: Marlon Falcón Hernández
+FECHA: 06 / 09 / 2026
+
+## OBJETIVO GENERAL
+Desarrollar y desplegar una plataforma web 100% local, robusta e independiente para la edición, firma, gestión de capas y generación de documentos PDF profesionales a partir de Markdown sin enviar archivos a servidores en la nube.
+
+## OBJETIVOS ESPECIFICOS POR AREA
+- Area Tecnología & Desarrollo: Desarrollar un motor de renderizado PDF cliente eficiente en JS y Python Flask con tiempo de respuesta inferior a 1 segundo.
+- Area Producto & UX/UI: Proporcionar una interfaz oscura elegante con previsualización side-by-side y 18 plantillas reutilizables.
+- Area Seguridad & Privacidad: Garantizar la ejecución offline y el almacenamiento en localStorage para asegurar cero fugas de información confidencial.
+- Area Operaciones & DevOps: Facilitar el despliegue en 1 comando utilizando Nginx, Docker y SSL/HTTPS para entornos de producción.
+
+## METRICAS Y CRITERIOS DE EXITO
+- 100% de procesamiento de archivos realizado en el navegador del cliente.
+- Reducción del tiempo de creación de documentos PDF a menos de 2 minutos utilizando plantillas Markdown.
+- Puntuación de satisfacción de usuario superior al 95% en usabilidad y fluidez.`;
         } else {
             return this.getDefaultMarkdownSample();
         }
@@ -3826,6 +3892,439 @@ DURACION: 12 Semanas
         }
     }
 
+    async createBudgetQuoteTemplate(mdText) {
+        showToast('Generando Presupuesto / Propuesta Comercial...', 'info');
+        try {
+            const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            const page = doc.addPage([595.28, 841.89]); // A4 Portrait
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+            const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+
+            const W = 595.28;
+            const H = 841.89;
+
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
+            const numero = this.getMdVal(mdText, 'NUMERO|PRESUPUESTO|N. PRESUPUESTO', 'PRE-2026-001');
+            const fecha = this.getMdVal(mdText, 'FECHA', new Date().toLocaleDateString('es-ES'));
+            const validez = this.getMdVal(mdText, 'VALIDEZ', '30 Días');
+            const emisor = this.getMdVal(mdText, 'EMISOR', 'Falcon Tech Solutions S.L.\nNIF: B-12345678\nCalle Mayor 100, Madrid');
+            const cliente = this.getMdVal(mdText, 'CLIENTE', 'Empresa Cliente S.A.\nNIF: A-87654321\nAv. Gran Vía 45, Barcelona');
+            const subtotal = this.getMdVal(mdText, 'SUBTOTAL', '2,000.00 EUR');
+            const iva = this.getMdVal(mdText, 'IVA', '420.00 EUR');
+            const total = this.getMdVal(mdText, 'TOTAL', '2,420.00 EUR');
+            const condiciones = this.getMdVal(mdText, 'CONDICIONES|NOTAS', 'Forma de pago 50% al inicio y 50% contra entrega. Válido por 30 días.');
+
+            // Header Banner
+            page.drawRectangle({
+                x: 0,
+                y: H - 85,
+                width: W,
+                height: 85,
+                color: theme.headerBg
+            });
+
+            page.drawText('PRESUPUESTO', {
+                x: 35,
+                y: H - 48,
+                size: 24,
+                font: fontBold,
+                color: theme.primary
+            });
+
+            page.drawText('PROPUESTA COMERCIAL DE SERVICIOS', {
+                x: 35,
+                y: H - 68,
+                size: 9.5,
+                font: fontReg,
+                color: rgb(0.85, 0.9, 0.98)
+            });
+
+            page.drawText(`Nº: ${numero}`, { x: W - 200, y: H - 38, size: 10, font: fontBold, color: rgb(1, 1, 1) });
+            page.drawText(`FECHA: ${fecha}`, { x: W - 200, y: H - 52, size: 9, font: fontReg, color: rgb(0.85, 0.9, 0.98) });
+            page.drawText(`VALIDEZ: ${validez}`, { x: W - 200, y: H - 66, size: 9, font: fontBold, color: theme.primary });
+
+            // Issuer & Client Cards
+            page.drawText('DATOS DEL PROVEEDOR', { x: 35, y: H - 110, size: 9.5, font: fontBold, color: theme.primary });
+            page.drawText(emisor, { x: 35, y: H - 126, size: 9, font: fontReg, color: rgb(0.3, 0.35, 0.45), lineHeight: 14 });
+
+            page.drawText('DATOS DEL CLIENTE', { x: 320, y: H - 110, size: 9.5, font: fontBold, color: theme.primary });
+            page.drawText(cliente, { x: 320, y: H - 126, size: 9, font: fontReg, color: rgb(0.3, 0.35, 0.45), lineHeight: 14 });
+
+            // Separator
+            page.drawLine({ start: { x: 35, y: H - 188 }, end: { x: W - 35, y: H - 188 }, thickness: 1, color: rgb(0.85, 0.88, 0.92) });
+
+            // Table Header
+            const tableY = H - 215;
+            page.drawRectangle({
+                x: 35,
+                y: tableY - 5,
+                width: W - 70,
+                height: 24,
+                color: rgb(0.93, 0.95, 0.98)
+            });
+
+            page.drawText('CONCEPTO / SERVICIO', { x: 45, y: tableY + 2, size: 9, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+            page.drawText('CANT.', { x: 330, y: tableY + 2, size: 9, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+            page.drawText('PRECIO U.', { x: 395, y: tableY + 2, size: 9, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+            page.drawText('SUBTOTAL', { x: 480, y: tableY + 2, size: 9, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+
+            // Items Table Parsing
+            const mdItems = [];
+            if (mdText) {
+                const lines = mdText.split('\n');
+                lines.forEach(line => {
+                    if (line.includes('|') && !line.includes('---') && !line.toLowerCase().includes('concepto')) {
+                        const parts = line.split('|').map(p => p.trim()).filter(p => p.length > 0);
+                        if (parts.length >= 1) {
+                            mdItems.push({
+                                desc: parts[0] || 'Servicio',
+                                cant: parts[1] || '1',
+                                precio: parts[2] || '0.00',
+                                total: parts[3] || '0.00'
+                            });
+                        }
+                    }
+                });
+            }
+
+            let rowY = tableY - 28;
+            const maxRows = Math.max(5, mdItems.length || 2);
+            for (let i = 0; i < maxRows; i++) {
+                if (mdItems[i]) {
+                    page.drawText(mdItems[i].desc, { x: 45, y: rowY, size: 9, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                    page.drawText(mdItems[i].cant, { x: 335, y: rowY, size: 9, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                    page.drawText(mdItems[i].precio, { x: 395, y: rowY, size: 9, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                    page.drawText(mdItems[i].total, { x: 480, y: rowY, size: 9, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                }
+                page.drawLine({
+                    start: { x: 35, y: rowY - 5 },
+                    end: { x: W - 35, y: rowY - 5 },
+                    thickness: 0.5,
+                    color: rgb(0.88, 0.9, 0.94)
+                });
+                rowY -= 30;
+            }
+
+            // Totals Box
+            const totalsY = rowY - 15;
+            page.drawText('Subtotal:', { x: 370, y: totalsY, size: 9.5, font: fontReg, color: rgb(0.3, 0.35, 0.45) });
+            page.drawText(subtotal, { x: 470, y: totalsY, size: 9.5, font: fontReg, color: rgb(0.3, 0.35, 0.45) });
+
+            page.drawText('IVA:', { x: 370, y: totalsY - 18, size: 9.5, font: fontReg, color: rgb(0.3, 0.35, 0.45) });
+            page.drawText(iva, { x: 470, y: totalsY - 18, size: 9.5, font: fontReg, color: rgb(0.3, 0.35, 0.45) });
+
+            page.drawRectangle({
+                x: 350,
+                y: totalsY - 50,
+                width: 210,
+                height: 26,
+                color: theme.primary
+            });
+            page.drawText('TOTAL PRESUPUESTO:', { x: 360, y: totalsY - 42, size: 10, font: fontBold, color: rgb(1, 1, 1) });
+            page.drawText(total, { x: 480, y: totalsY - 42, size: 10, font: fontBold, color: rgb(1, 1, 1) });
+
+            // Conditions Box
+            page.drawRectangle({
+                x: 35,
+                y: 110,
+                width: W - 70,
+                height: 90,
+                borderWidth: 1,
+                borderColor: rgb(0.82, 0.86, 0.92),
+                color: theme.bg
+            });
+
+            page.drawText('CONDICIONES Y FORMA DE PAGO:', { x: 48, y: 182, size: 9.5, font: fontBold, color: theme.primary });
+            page.drawText(condiciones, { x: 48, y: 160, size: 8.5, font: fontReg, color: rgb(0.3, 0.35, 0.45), lineHeight: 13 });
+
+            // Acceptance Signature Line
+            page.drawLine({ start: { x: 35, y: 65 }, end: { x: 220, y: 65 }, thickness: 1, color: rgb(0.7, 0.7, 0.7) });
+            page.drawText('Firma de Conformidad / Aceptación Cliente', { x: 35, y: 50, size: 8, font: fontReg, color: rgb(0.5, 0.5, 0.5) });
+
+            const bytes = await doc.save();
+            await this.loadPDFBytes(bytes, 'presupuesto_comercial.pdf');
+            showToast('Presupuesto / Propuesta Comercial generado correctamente.', 'success');
+        } catch (err) {
+            console.error('Error al generar presupuesto:', err);
+            showToast('Error al generar la propuesta comercial.', 'danger');
+        }
+    }
+
+    async createMeetingSummaryTemplate(mdText) {
+        showToast('Generando Resumen de Reunión / Acta...', 'info');
+        try {
+            const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            const page = doc.addPage([595.28, 841.89]); // A4 Portrait
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+            const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+
+            const W = 595.28;
+            const H = 841.89;
+
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
+            const titulo = this.getMdVal(mdText, 'TITULO|REUNION', 'Reunión de Planificación y Seguimiento Q3');
+            const fecha = this.getMdVal(mdText, 'FECHA', new Date().toLocaleDateString('es-ES'));
+            const hora = this.getMdVal(mdText, 'HORA', '10:00 - 11:30 h');
+            const lugar = this.getMdVal(mdText, 'LUGAR|MODALIDAD', 'Sala de Juntas / Google Meet');
+            const organizador = this.getMdVal(mdText, 'ORGANIZADOR|MODERADOR', 'Marlon Falcón Hernández');
+            const asistentes = this.getMdVal(mdText, 'ASISTENTES', 'Marlon Falcón, Laura Gómez, Carlos Ruiz, Ana Martínez');
+            const objetivo = this.getMdVal(mdText, 'OBJETIVO', 'Revisar avances del trimestre Q3 y definir hoja de ruta.');
+
+            // Top Header Bar
+            page.drawRectangle({
+                x: 0,
+                y: H - 90,
+                width: W,
+                height: 90,
+                color: theme.headerBg
+            });
+
+            page.drawText('RESUMEN DE REUNION / ACTA', {
+                x: 35,
+                y: H - 42,
+                size: 9.5,
+                font: fontBold,
+                color: theme.primary
+            });
+
+            page.drawText(titulo, {
+                x: 35,
+                y: H - 68,
+                size: 16,
+                font: fontBold,
+                color: rgb(1, 1, 1)
+            });
+
+            // Meeting Meta Box
+            page.drawRectangle({
+                x: 35,
+                y: H - 165,
+                width: W - 70,
+                height: 65,
+                color: theme.bg,
+                borderColor: theme.border,
+                borderWidth: 1
+            });
+
+            page.drawText(`FECHA: ${fecha}  |  HORA: ${hora}`, { x: 48, y: H - 120, size: 9, font: fontBold, color: theme.primary });
+            page.drawText(`LUGAR: ${lugar}  |  ORGANIZADOR: ${organizador}`, { x: 48, y: H - 138, size: 8.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+            page.drawText(`ASISTENTES: ${asistentes}`, { x: 48, y: H - 155, size: 8.5, font: fontReg, color: rgb(0.3, 0.35, 0.45) });
+
+            let currY = H - 185;
+
+            // Objective Card
+            if (objetivo) {
+                page.drawText('OBJETIVO PRINCIPAL:', { x: 35, y: currY, size: 9.5, font: fontBold, color: theme.primary });
+                currY -= 15;
+                page.drawText(objetivo, { x: 35, y: currY, size: 9.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                currY -= 25;
+            }
+
+            const wrapText = (text, maxChars = 84) => {
+                if (!text || text.length <= maxChars) return [text];
+                const words = text.split(' ');
+                const lines = [];
+                let currentLine = '';
+                for (const word of words) {
+                    if ((currentLine + ' ' + word).trim().length <= maxChars) {
+                        currentLine = (currentLine + ' ' + word).trim();
+                    } else {
+                        if (currentLine) lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                if (currentLine) lines.push(currentLine);
+                return lines;
+            };
+
+            // Parse Markdown Sections
+            if (mdText) {
+                const lines = mdText.split('\n').map(l => l.trim());
+                lines.forEach(line => {
+                    if (currY < 50) return;
+
+                    if (line.startsWith('## ')) {
+                        const secTitle = line.replace(/^##\s+/, '').toUpperCase();
+                        currY -= 10;
+
+                        page.drawRectangle({
+                            x: 35,
+                            y: currY - 4,
+                            width: W - 70,
+                            height: 22,
+                            color: rgb(0.93, 0.95, 0.98),
+                            borderColor: rgb(0.85, 0.88, 0.92),
+                            borderWidth: 0.8
+                        });
+
+                        page.drawText(secTitle, { x: 45, y: currY + 2, size: 10, font: fontBold, color: theme.primary });
+                        currY -= 26;
+                    } else if (line.startsWith('- ') || line.startsWith('* ')) {
+                        const itemText = line.replace(/^[-*]\s+/, '').trim();
+                        const wrapped = wrapText(itemText, 80);
+
+                        wrapped.forEach((wLine, idx) => {
+                            if (idx === 0) {
+                                page.drawText('•', { x: 45, y: currY, size: 10, font: fontBold, color: theme.primary });
+                                page.drawText(wLine, { x: 58, y: currY, size: 9.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                            } else {
+                                page.drawText(wLine, { x: 58, y: currY, size: 9.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                            }
+                            currY -= 16;
+                        });
+                        currY -= 4;
+                    }
+                });
+            }
+
+            const bytes = await doc.save();
+            await this.loadPDFBytes(bytes, 'resumen_reunion.pdf');
+            showToast('Resumen de Reunión / Acta generado correctamente.', 'success');
+        } catch (err) {
+            console.error('Error al generar resumen de reunión:', err);
+            showToast('Error al generar el resumen de reunión.', 'danger');
+        }
+    }
+
+    async createProjectGoalsTemplate(mdText) {
+        showToast('Generando Objetivos de Proyecto...', 'info');
+        try {
+            const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            const page = doc.addPage([595.28, 841.89]); // A4 Portrait
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+            const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+
+            const W = 595.28;
+            const H = 841.89;
+
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
+            const nomProyecto = this.getMdVal(mdText, 'NOMBRE_PROYECTO|PROYECTO', 'Plataforma PDF Local Editor 2026');
+            const codigo = this.getMdVal(mdText, 'CODIGO|VERSION', 'PRJ-2026-V1');
+            const responsable = this.getMdVal(mdText, 'RESPONSABLE|LIDER', 'Marlon Falcón Hernández');
+            const fecha = this.getMdVal(mdText, 'FECHA', new Date().toLocaleDateString('es-ES'));
+
+            // Top Header Bar
+            page.drawRectangle({
+                x: 0,
+                y: H - 95,
+                width: W,
+                height: 95,
+                color: theme.headerBg
+            });
+
+            page.drawText('DEFINICION DE OBJETIVOS DEL PROYECTO', {
+                x: 35,
+                y: H - 42,
+                size: 9.5,
+                font: fontBold,
+                color: theme.primary
+            });
+
+            page.drawText(nomProyecto, {
+                x: 35,
+                y: H - 68,
+                size: 16,
+                font: fontBold,
+                color: rgb(1, 1, 1)
+            });
+
+            page.drawText(`CÓDIGO: ${codigo}  |  LÍDER: ${responsable}  |  FECHA: ${fecha}`, {
+                x: 35,
+                y: H - 86,
+                size: 8.5,
+                font: fontReg,
+                color: rgb(0.85, 0.9, 0.98)
+            });
+
+            let currY = H - 115;
+
+            const wrapText = (text, maxChars = 82) => {
+                if (!text || text.length <= maxChars) return [text];
+                const words = text.split(' ');
+                const lines = [];
+                let currentLine = '';
+                for (const word of words) {
+                    if ((currentLine + ' ' + word).trim().length <= maxChars) {
+                        currentLine = (currentLine + ' ' + word).trim();
+                    } else {
+                        if (currentLine) lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                if (currentLine) lines.push(currentLine);
+                return lines;
+            };
+
+            // Extract General Goal Text
+            const generalGoalText = this.getMdVal(mdText, 'OBJETIVO GENERAL', '');
+
+            // Parse Sections
+            if (mdText) {
+                const lines = mdText.split('\n').map(l => l.trim());
+                lines.forEach(line => {
+                    if (currY < 50) return;
+
+                    if (line.startsWith('## ')) {
+                        const secTitle = line.replace(/^##\s+/, '').toUpperCase();
+                        currY -= 10;
+
+                        // Section Banner
+                        page.drawRectangle({
+                            x: 35,
+                            y: currY - 4,
+                            width: W - 70,
+                            height: 22,
+                            color: rgb(0.93, 0.95, 0.98),
+                            borderColor: theme.border,
+                            borderWidth: 0.8
+                        });
+
+                        page.drawText(secTitle, { x: 45, y: currY + 2, size: 10, font: fontBold, color: theme.primary });
+                        currY -= 28;
+                    } else if (line.startsWith('- ') || line.startsWith('* ')) {
+                        const itemText = line.replace(/^[-*]\s+/, '').trim();
+                        const wrapped = wrapText(itemText, 78);
+
+                        // Highlight Area name if present (e.g., "- Area X: ...")
+                        wrapped.forEach((wLine, idx) => {
+                            if (idx === 0) {
+                                page.drawRectangle({ x: 45, y: currY + 1, width: 8, height: 8, color: theme.primary });
+                                page.drawText(wLine, { x: 60, y: currY, size: 9.5, font: fontReg, color: rgb(0.15, 0.2, 0.3) });
+                            } else {
+                                page.drawText(wLine, { x: 60, y: currY, size: 9.5, font: fontReg, color: rgb(0.15, 0.2, 0.3) });
+                            }
+                            currY -= 16;
+                        });
+                        currY -= 6;
+                    } else if (line.length > 0 && !line.startsWith('#') && !/^[A-Z_]+:/i.test(line)) {
+                        const wrapped = wrapText(line, 84);
+                        wrapped.forEach(wLine => {
+                            page.drawText(wLine, { x: 35, y: currY, size: 9.5, font: fontReg, color: rgb(0.25, 0.3, 0.4) });
+                            currY -= 16;
+                        });
+                        currY -= 6;
+                    }
+                });
+            }
+
+            const bytes = await doc.save();
+            await this.loadPDFBytes(bytes, 'objetivos_proyecto.pdf');
+            showToast('Documento de Objetivos de Proyecto generado correctamente.', 'success');
+        } catch (err) {
+            console.error('Error al generar objetivos de proyecto:', err);
+            showToast('Error al generar el documento de objetivos.', 'danger');
+        }
+    }
+
     initMarkdownModal() {
         const modal = document.getElementById('markdown-modal');
         const openHeaderBtn = document.getElementById('btn-open-markdown-modal');
@@ -4107,6 +4606,15 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
             return;
         } else if (templateType === 'gantt-chart' || templateType === 'gantt') {
             await this.createGanttChartTemplate(mdText);
+            return;
+        } else if (templateType === 'budget-quote' || templateType === 'quote') {
+            await this.createBudgetQuoteTemplate(mdText);
+            return;
+        } else if (templateType === 'meeting-summary' || templateType === 'meeting') {
+            await this.createMeetingSummaryTemplate(mdText);
+            return;
+        } else if (templateType === 'project-goals' || templateType === 'goals') {
+            await this.createProjectGoalsTemplate(mdText);
             return;
         }
 
