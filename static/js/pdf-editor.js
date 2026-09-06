@@ -1514,6 +1514,59 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
         }
     }
 
+    getTemplateTheme(estiloVal = 1) {
+        const { rgb } = window.PDFLib;
+        const estilo = parseInt(estiloVal) || 1;
+        switch (estilo) {
+            case 2: // Emerald Green / Nature
+                return {
+                    headerBg: rgb(0.05, 0.18, 0.12),
+                    primary: rgb(0.05, 0.65, 0.41),
+                    secondary: rgb(0.96, 0.62, 0.04),
+                    bg: rgb(0.98, 1, 0.98),
+                    border: rgb(0.05, 0.65, 0.41),
+                    textDark: rgb(0.05, 0.18, 0.12)
+                };
+            case 3: // Luxury Gold / Dark
+                return {
+                    headerBg: rgb(0.12, 0.11, 0.08),
+                    primary: rgb(0.85, 0.68, 0.2),
+                    secondary: rgb(0.86, 0.15, 0.15),
+                    bg: rgb(0.99, 0.99, 0.97),
+                    border: rgb(0.85, 0.68, 0.2),
+                    textDark: rgb(0.12, 0.11, 0.08)
+                };
+            case 4: // Crimson Red / High Impact
+                return {
+                    headerBg: rgb(0.22, 0.08, 0.12),
+                    primary: rgb(0.86, 0.15, 0.15),
+                    secondary: rgb(0.23, 0.51, 0.96),
+                    bg: rgb(1, 0.98, 0.98),
+                    border: rgb(0.86, 0.15, 0.15),
+                    textDark: rgb(0.22, 0.08, 0.12)
+                };
+            case 5: // Tech Purple / Cyber
+                return {
+                    headerBg: rgb(0.12, 0.08, 0.22),
+                    primary: rgb(0.55, 0.27, 0.85),
+                    secondary: rgb(0.23, 0.7, 0.96),
+                    bg: rgb(0.98, 0.97, 1),
+                    border: rgb(0.55, 0.27, 0.85),
+                    textDark: rgb(0.12, 0.08, 0.22)
+                };
+            case 1:
+            default: // Blue Corporate
+                return {
+                    headerBg: rgb(0.08, 0.12, 0.22),
+                    primary: rgb(0.23, 0.51, 0.96),
+                    secondary: rgb(0.05, 0.65, 0.41),
+                    bg: rgb(0.98, 0.99, 1),
+                    border: rgb(0.23, 0.51, 0.96),
+                    textDark: rgb(0.09, 0.14, 0.24)
+                };
+        }
+    }
+
     async createInvoiceTemplate(mdText) {
         showToast('Generando plantilla de Factura...', 'info');
         try {
@@ -1525,6 +1578,9 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
 
             const W = 595.28;
             const H = 841.89;
+
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
 
             const emisor = this.getMdVal(mdText, 'EMISOR', 'Empresa Ejemplo S.L.\nNIF: B-12345678\nCalle Mayor, 100, Madrid');
             const cliente = this.getMdVal(mdText, 'CLIENTE', 'Cliente Ejemplo S.A.\nNIF: A-87654321\nAv. Diagonal 45, Barcelona');
@@ -1541,7 +1597,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 80,
                 width: W,
                 height: 80,
-                color: rgb(0.06, 0.09, 0.16)
+                color: theme.headerBg
             });
 
             page.drawText('FACTURA', {
@@ -1549,7 +1605,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 52,
                 size: 26,
                 font: fontBold,
-                color: rgb(0.23, 0.51, 0.96)
+                color: theme.primary
             });
 
             page.drawText(`N. FACTURA: ${numero}`, { x: W - 220, y: H - 38, size: 10, font: fontBold, color: rgb(1, 1, 1) });
@@ -1656,7 +1712,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: totalsY - 55,
                 width: 200,
                 height: 28,
-                color: rgb(0.23, 0.51, 0.96)
+                color: theme.primary
             });
             page.drawText('TOTAL FACTURA:', { x: 370, y: totalsY - 47, size: 10, font: fontBold, color: rgb(1, 1, 1) });
             page.drawText(total, { x: 470, y: totalsY - 47, size: 10, font: fontBold, color: rgb(1, 1, 1) });
@@ -1695,6 +1751,9 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
             const W = 841.89;
             const H = 595.28;
 
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
             const titulo = this.getMdVal(mdText, 'TITULO|DIPLOMA', 'DIPLOMA DE ACREDITACION');
             const alumno = this.getMdVal(mdText, 'OTORGADO_A|OTORGADO A|ALUMNO|NOMBRE', 'NOMBRE Y APELLIDOS DEL ALUMNO');
             const curso = this.getMdVal(mdText, 'POR_COMPLETAR|POR COMPLETAR|CURSO', 'CURSO DE ESPECIALIZACION PROFESIONAL');
@@ -1709,8 +1768,8 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 width: W - 40,
                 height: H - 40,
                 borderWidth: 3,
-                borderColor: rgb(0.85, 0.65, 0.13), // Gold
-                color: rgb(0.99, 0.99, 0.97)
+                borderColor: theme.primary,
+                color: theme.bg
             });
 
             // Inner border
@@ -1720,7 +1779,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 width: W - 56,
                 height: H - 56,
                 borderWidth: 1,
-                borderColor: rgb(0.2, 0.25, 0.35)
+                borderColor: theme.headerBg
             });
 
             // Title
@@ -1729,7 +1788,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 90,
                 size: 24,
                 font: fontBold,
-                color: rgb(0.12, 0.18, 0.28)
+                color: theme.textDark
             });
 
             page.drawText('OTORGADO A:', {
@@ -1746,14 +1805,14 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 200,
                 size: 20,
                 font: fontBold,
-                color: rgb(0.85, 0.65, 0.13)
+                color: theme.primary
             });
 
             page.drawLine({
                 start: { x: 150, y: H - 210 },
                 end: { x: W - 150, y: H - 210 },
                 thickness: 1,
-                color: rgb(0.85, 0.65, 0.13)
+                color: theme.primary
             });
 
             // Subtitle
@@ -1818,18 +1877,21 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
             const W = 595.28;
             const H = 841.89;
 
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
             const titulo = this.getMdVal(mdText, 'TITULO|ARTICULO', 'ARTICULO / PROPIEDAD / VEHICULO');
             const desc = this.getMdVal(mdText, 'DESCRIPCION|DETALLES', 'Añade aquí el título o descripción principal del objeto en venta.');
             const precio = this.getMdVal(mdText, 'PRECIO', '250.000 EUR');
             const tel = this.getMdVal(mdText, 'TELEFONO|TEL', '600 000 000');
 
-            // Top Banner Red
+            // Top Banner
             page.drawRectangle({
                 x: 20,
                 y: H - 180,
                 width: W - 40,
                 height: 160,
-                color: rgb(0.86, 0.15, 0.15)
+                color: theme.primary
             });
 
             page.drawText('SE VENDE', {
@@ -1981,6 +2043,9 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
             const gapX = 33;
             const gapY = 32;
 
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
             const nombre = this.getMdVal(mdText, 'NOMBRE', 'MARLON FALCON');
             const cargo = this.getMdVal(mdText, 'CARGO|PUESTO', 'Consultor & Desarrollador Software');
             const empresa = this.getMdVal(mdText, 'EMPRESA', 'Falcón Solutions');
@@ -2003,7 +2068,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                         height: cardH,
                         borderWidth: 1,
                         borderColor: rgb(0.8, 0.82, 0.88),
-                        color: rgb(0.98, 0.99, 1)
+                        color: theme.bg
                     });
 
                     // Left Accent Color Bar
@@ -2012,7 +2077,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                         y: y,
                         width: 8,
                         height: cardH,
-                        color: rgb(0.23, 0.51, 0.96)
+                        color: theme.primary
                     });
 
                     // Header / Name
@@ -2021,7 +2086,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                         y: y + cardH - 32,
                         size: 12,
                         font: fontBold,
-                        color: rgb(0.09, 0.14, 0.24)
+                        color: theme.textDark
                     });
 
                     // Job Title
@@ -2030,7 +2095,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                         y: y + cardH - 46,
                         size: 8,
                         font: fontBold,
-                        color: rgb(0.23, 0.51, 0.96)
+                        color: theme.primary
                     });
 
                     // Thin separator line
@@ -2217,6 +2282,9 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
             const W = 595.28;
             const H = 841.89;
 
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
             const titulo = this.getMdVal(mdText, 'TITULO|HEADER', 'ESCANEA EL CODIGO QR');
             const subtitulo = this.getMdVal(mdText, 'SUBTITULO', 'Accede de forma rápida desde tu teléfono móvil');
             const urlQr = this.getMdVal(mdText, 'URL_QR|URL|SITIO WEB', 'https://www.marlonfalcon.com');
@@ -2229,7 +2297,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 140,
                 width: W,
                 height: 140,
-                color: rgb(0.06, 0.09, 0.16)
+                color: theme.headerBg
             });
 
             page.drawText(titulo, {
@@ -2237,7 +2305,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 85,
                 size: 24,
                 font: fontBold,
-                color: rgb(0.23, 0.51, 0.96)
+                color: theme.primary
             });
 
             page.drawText(subtitulo, {
@@ -2260,7 +2328,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 width: qrSize + 30,
                 height: qrSize + 30,
                 borderWidth: 2,
-                borderColor: rgb(0.8, 0.8, 0.8),
+                borderColor: theme.border,
                 color: rgb(1, 1, 1)
             });
 
@@ -2300,8 +2368,8 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 width: W - 80,
                 height: 280,
                 borderWidth: 2,
-                borderColor: rgb(0.23, 0.51, 0.96),
-                color: rgb(0.97, 0.98, 1)
+                borderColor: theme.primary,
+                color: theme.bg
             });
 
             page.drawText('INFORMACION DEL ANUNCIO O EVENTO', {
@@ -2309,7 +2377,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: 325,
                 size: 15,
                 font: fontBold,
-                color: rgb(0.1, 0.15, 0.25)
+                color: theme.textDark
             });
 
             page.drawText(info, {
@@ -2321,7 +2389,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 lineHeight: 16
             });
 
-            page.drawText('SITIO WEB / ENLACE:', { x: 60, y: 220, size: 12, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+            page.drawText('SITIO WEB / ENLACE:', { x: 60, y: 220, size: 12, font: fontBold, color: theme.primary });
             page.drawText(urlQr, { x: 60, y: 195, size: 15, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
 
             page.drawText(ubicacion, {
@@ -2622,6 +2690,9 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
             const W = 595.28;
             const H = 841.89;
 
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
             const puesto = this.getMdVal(mdText, 'PUESTO|VACANTE', 'DESARROLLADOR / CONSULTOR SOFTWARE SENIOR');
             const empresa = this.getMdVal(mdText, 'EMPRESA', 'Falcon Tech Solutions');
             const ubi = this.getMdVal(mdText, 'UBICACION', 'Madrid, España / Híbrido');
@@ -2635,7 +2706,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 120,
                 width: W,
                 height: 120,
-                color: rgb(0.08, 0.12, 0.22)
+                color: theme.headerBg
             });
 
             page.drawText('OFERTA DE EMPLEO / VACANTE LABORAL', {
@@ -2643,7 +2714,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 65,
                 size: 22,
                 font: fontBold,
-                color: rgb(0.23, 0.51, 0.96)
+                color: theme.primary
             });
 
             page.drawText('Buscamos talento para unirse a nuestro equipo profesional', {
@@ -2660,8 +2731,8 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 190,
                 width: W - 70,
                 height: 50,
-                color: rgb(0.93, 0.95, 0.99),
-                borderColor: rgb(0.23, 0.51, 0.96),
+                color: theme.bg,
+                borderColor: theme.primary,
                 borderWidth: 1.5
             });
 
@@ -2670,7 +2741,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 170,
                 size: 12,
                 font: fontBold,
-                color: rgb(0.09, 0.14, 0.24)
+                color: theme.textDark
             });
 
             // Company & Details Box
@@ -2777,6 +2848,9 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
             const W = 595.28;
             const H = 841.89;
 
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
             const numero = this.getMdVal(mdText, 'NUMERO|RECIBO', 'REC-2026-001');
             const fecha = this.getMdVal(mdText, 'FECHA', new Date().toLocaleDateString('es-ES'));
             const pagador = this.getMdVal(mdText, 'PAGADOR|DE', 'Nombre / Razón Social del cliente que entrega dinero');
@@ -2793,7 +2867,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: startY - 60,
                 width: W - 70,
                 height: 60,
-                color: rgb(0.08, 0.12, 0.22)
+                color: theme.headerBg
             });
 
             page.drawText('COMPROBANTE DE RECEPCION', {
@@ -2801,7 +2875,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: startY - 36,
                 size: 15,
                 font: fontBold,
-                color: rgb(0.23, 0.51, 0.96)
+                color: theme.primary
             });
 
             page.drawText(`RECIBO N: ${numero}`, {
@@ -3256,6 +3330,9 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
             const W = 595.28;
             const H = 841.89;
 
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
             const titulo = this.getMdVal(mdText, 'TITULO|HEADER', 'MIS OBJETIVOS Y TAREAS PENDIENTES');
             const fecha = this.getMdVal(mdText, 'FECHA', new Date().toLocaleDateString('es-ES'));
             const categoria = this.getMdVal(mdText, 'CATEGORIA|PROYECTO', 'PROYECTO & PRODUCTIVIDAD');
@@ -3267,7 +3344,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 95,
                 width: W - 70,
                 height: 65,
-                color: rgb(0.08, 0.12, 0.22)
+                color: theme.headerBg
             });
 
             page.drawText('LISTA DE TAREAS / TODO LIST', {
@@ -3275,7 +3352,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 52,
                 size: 10,
                 font: fontBold,
-                color: rgb(0.23, 0.51, 0.96)
+                color: theme.primary
             });
 
             page.drawText(titulo, {
@@ -3287,7 +3364,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
             });
 
             page.drawText(`FECHA: ${fecha}`, { x: W - 180, y: H - 52, size: 9, font: fontReg, color: rgb(0.8, 0.85, 0.95) });
-            page.drawText(`CAT: ${categoria}`, { x: W - 180, y: H - 72, size: 8.5, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+            page.drawText(`CAT: ${categoria}`, { x: W - 180, y: H - 72, size: 8.5, font: fontBold, color: theme.primary });
 
             let currY = H - 120;
 
@@ -3391,6 +3468,9 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
             const W = 595.28;
             const H = 841.89;
 
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
             const nombre = this.getMdVal(mdText, 'NOMBRE', 'MARLON FALCON HERNANDEZ');
             const tituloProf = this.getMdVal(mdText, 'TITULO_PROFESIONAL|TITULO', 'Desarrollador Senior / Consultor de Software');
             const email = this.getMdVal(mdText, 'EMAIL', 'contacto@marlonfalcon.com');
@@ -3404,7 +3484,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 110,
                 width: W,
                 height: 110,
-                color: rgb(0.08, 0.12, 0.22)
+                color: theme.headerBg
             });
 
             // Accent Left Bar
@@ -3413,7 +3493,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 110,
                 width: 10,
                 height: 110,
-                color: rgb(0.23, 0.51, 0.96)
+                color: theme.primary
             });
 
             page.drawText(nombre, {
@@ -3429,7 +3509,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                 y: H - 72,
                 size: 12,
                 font: fontBold,
-                color: rgb(0.23, 0.51, 0.96)
+                color: theme.primary
             });
 
             page.drawText(`${email}  |  ${tel}  |  ${ubi}  |  ${web}`, {
@@ -3475,14 +3555,14 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
                             y: currY,
                             size: 12,
                             font: fontBold,
-                            color: rgb(0.23, 0.51, 0.96)
+                            color: theme.primary
                         });
 
                         page.drawLine({
                             start: { x: 35, y: currY - 4 },
                             end: { x: W - 35, y: currY - 4 },
                             thickness: 1.2,
-                            color: rgb(0.23, 0.51, 0.96)
+                            color: theme.primary
                         });
 
                         currY -= 22;
@@ -3492,7 +3572,7 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
 
                         wrapped.forEach((wLine, idx) => {
                             if (idx === 0) {
-                                page.drawText('•', { x: 45, y: currY, size: 10, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+                                page.drawText('•', { x: 45, y: currY, size: 10, font: fontBold, color: theme.primary });
                                 page.drawText(wLine, { x: 58, y: currY, size: 10, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
                             } else {
                                 page.drawText(wLine, { x: 58, y: currY, size: 10, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
@@ -3834,6 +3914,10 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
             const W = 841.89; // A4 Landscape
             const H = 595.28;
 
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+            const isDarkTheme = (parseInt(estilo) === 2 || parseInt(estilo) === 4);
+
             const slideBlocks = mdText.split(/\n\s*---\s*\n|^\s*---\s*$/m).map(b => b.trim()).filter(b => b.length > 0);
             const totalSlides = slideBlocks.length || 1;
 
@@ -3859,21 +3943,21 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
                 const slideNum = index + 1;
 
                 // Base Background
-                page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(1, 1, 1) });
+                page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: isDarkTheme ? (parseInt(estilo) === 4 ? rgb(0.08, 0.08, 0.08) : rgb(0.08, 0.12, 0.22)) : theme.bg });
 
                 // Left Accent Stripe
-                page.drawRectangle({ x: 0, y: 0, width: 12, height: H, color: rgb(0.23, 0.51, 0.96) });
+                page.drawRectangle({ x: 0, y: 0, width: 12, height: H, color: theme.primary });
 
                 // Footer Bar
-                page.drawRectangle({ x: 0, y: 0, width: W, height: 28, color: rgb(0.96, 0.97, 0.99) });
-                page.drawLine({ start: { x: 0, y: 28 }, end: { x: W, y: 28 }, thickness: 0.8, color: rgb(0.85, 0.88, 0.92) });
+                page.drawRectangle({ x: 0, y: 0, width: W, height: 28, color: isDarkTheme ? rgb(0.04, 0.06, 0.12) : rgb(0.96, 0.97, 0.99) });
+                page.drawLine({ start: { x: 0, y: 28 }, end: { x: W, y: 28 }, thickness: 0.8, color: isDarkTheme ? rgb(0.2, 0.25, 0.35) : rgb(0.85, 0.88, 0.92) });
 
                 page.drawText('PDF Local Editor - Presentacion Markdown', {
                     x: 35,
                     y: 9,
                     size: 8.5,
                     font: fontReg,
-                    color: rgb(0.45, 0.5, 0.6)
+                    color: isDarkTheme ? rgb(0.7, 0.75, 0.85) : rgb(0.45, 0.5, 0.6)
                 });
 
                 page.drawText(`Diapositiva ${slideNum} de ${totalSlides}`, {
@@ -3881,7 +3965,7 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
                     y: 9,
                     size: 8.5,
                     font: fontBold,
-                    color: rgb(0.23, 0.51, 0.96)
+                    color: theme.primary
                 });
 
                 const rawLines = block.split('\n').map(l => l.trim());
