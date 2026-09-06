@@ -1670,18 +1670,31 @@ ESTILO: 1
 NUMERO: CTR-2026-001
 FECHA: 06 de Septiembre de 2026
 LUGAR: Madrid, España
-PRESTADOR: Juan Pérez Gómez\\nNIF/DNI: 12345678A\\nDOMICILIO: Calle Mayor 100, Madrid\\nEMAIL: prestador@empresa.com
-CLIENTE: María López Fernández\\nNIF/DNI: 87654321B\\nDOMICILIO: Av. Gran Vía 45, Madrid\\nEMAIL: cliente@empresa.com
-OBJETO: Prestación de Servicios de Consultoría y Desarrollo Web
-IMPORTE: 1,500.00 EUR
+PRESTADOR: Falcon Tech Solutions S.L.\\nNIF/CIF: B-12345678\\nDOMICILIO: Calle Mayor 100, Madrid\\nEMAIL: prestador@empresa.com
+CLIENTE: Empresa Cliente S.A.\\nNIF/CIF: A-87654321\\nDOMICILIO: Av. Gran Vía 45, Madrid\\nEMAIL: cliente@empresa.com
+OBJETO: Prestación de Servicios de Consultoría, Desarrollo de Software y Soporte Técnico
+IMPORTE: 3,500.00 EUR
 FORMA_PAGO: 50% al inicio de los trabajos y 50% a la entrega del proyecto.
 
-## CLAUSULAS DEL CONTRATO
-- PRIMERA - OBJETO: EL PRESTADOR se compromete a realizar para EL CLIENTE los servicios detallados en el objeto del presente contrato conforme a los estándares de calidad profesionales.
-- SEGUNDA - PRECIO Y PAGO: EL CLIENTE abonará la cantidad de IMPORTE acordada según la forma de pago estipulada. Los pagos no realizados en fecha devengarán intereses de demora.
-- TERCERA - DURACION: El presente contrato entrará en vigor el día de su firma y finalizará con la entrega del servicio y conformidad de ambas partes.
-- CUARTA - CONFIDENCIALIDAD: Ambas partes acuerdan mantener estricta confidencialidad sobre toda la información comercial y técnica intercambiada.
-- QUINTA - JURISDICCION: Para la resolución de cualquier controversia, las partes se someten expresamente a los Juzgados y Tribunales del lugar de celebración.`;
+## PAGINA 1 - IDENTIFICACION Y CONDICIONES INICIALES
+- PRIMERA - OBJETO DEL CONTRATO: EL PRESTADOR se compromete a realizar para EL CLIENTE los servicios profesionales descritos en el presente documento, garantizando el cumplimiento de las especificaciones acordadas.
+- SEGUNDA - PRECIO Y CONDICIONES DE PAGO: EL CLIENTE se obliga a abonar la cantidad total estipulada como IMPORTE mediante la FORMA DE PAGO acordada. El retraso en los pagos devengará un interés de demora del 5% mensual.
+- TERCERA - PLAZO DE EJECUCION Y ENTREGABLES: Los trabajos darán comienzo inmediatamente a la firma del contrato y finalizarán en un plazo máximo de 60 días naturales conforme al calendario pactado.
+
+---
+
+## PAGINA 2 - OBLIGACIONES Y PROPIEDAD INTELECTUAL
+- CUARTA - OBLIGACIONES DEL PRESTADOR: Ejecutar los servicios con la máxima diligencia profesional, asignando personal cualificado y manteniendo informado al CLIENTE del progreso periódicamente.
+- QUINTA - OBLIGACIONES DEL CLIENTE: Suministrar en tiempo y forma la información, credenciales y documentación requeridas para la correcta ejecución de los servicios prestados.
+- SEXTA - PROPIEDAD INTELECTUAL Y DERECHOS: Los derechos de explotación de los desarrollos y entregables serán cedidos en exclusiva al CLIENTE una vez completado el pago total de la contraprestación.
+- SEPTIMA - CONFIDENCIALIDAD Y PROTECCION DE DATOS (RGPD): Ambas partes garantizan el secreto profesional respecto a toda información confidencial y el estricto cumplimiento de la normativa vigente de protección de datos.
+
+---
+
+## PAGINA 3 - EXTINCION, JURISDICCION Y FIRMA FORMAL
+- OCTAVA - CAUSAS DE RESCISION Y EXTINCION: El incumplimiento grave de cualquiera de las cláusulas otorgará a la parte afectada el derecho a rescindir unilateralmente el contrato previa notificación por escrito.
+- NOVENA - MODIFICACIONES AL ACUERDO: Cualquier modificación, adenda o ampliación del alcance de este contrato requerirá acuerdo expreso firmado por ambas partes.
+- DECIMA - LEY APLICABLE Y JURISDICCION: El presente contrato se rige por la legislación española. Ambas partes se someten expresamente a los Juzgados y Tribunales del lugar de celebración del contrato.`;
         } else {
             return this.getDefaultMarkdownSample();
         }
@@ -5382,11 +5395,10 @@ FORMA_PAGO: 50% al inicio de los trabajos y 50% a la entrega del proyecto.
     }
 
     async createServiceContractTemplate(mdText, isSilent = false) {
-        showToast('Generando Contrato de Prestación de Servicios...', 'info', isSilent);
+        showToast('Generando Contrato de Prestación de Servicios (3 Páginas)...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
-            const page = doc.addPage([595.28, 841.89]); // A4 Portrait
             const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
             const fontReg = await doc.embedFont(StandardFonts.Helvetica);
 
@@ -5399,90 +5411,11 @@ FORMA_PAGO: 50% al inicio de los trabajos y 50% a la entrega del proyecto.
             const numero = this.getMdVal(mdText, 'NUMERO|CONTRATO', 'CTR-2026-001');
             const fecha = this.getMdVal(mdText, 'FECHA', '06 de Septiembre de 2026');
             const lugar = this.getMdVal(mdText, 'LUGAR|CIUDAD', 'Madrid, España');
-            const prestador = this.getMdVal(mdText, 'PRESTADOR|PARTE_A', 'Juan Pérez Gómez\nNIF/DNI: 12345678A\nCalle Mayor 100, Madrid\nprestador@empresa.com');
-            const cliente = this.getMdVal(mdText, 'CLIENTE|PARTE_B', 'María López Fernández\nNIF/DNI: 87654321B\nAv. Gran Vía 45, Madrid\ncliente@empresa.com');
-            const objeto = this.getMdVal(mdText, 'OBJETO|SERVICIO', 'Prestación de Servicios de Consultoría y Desarrollo Web');
-            const importe = this.getMdVal(mdText, 'IMPORTE|PRECIO', '1,500.00 EUR');
+            const prestador = this.getMdVal(mdText, 'PRESTADOR|PARTE_A', 'Falcon Tech Solutions S.L.\nNIF/CIF: B-12345678\nCalle Mayor 100, Madrid\nprestador@empresa.com');
+            const cliente = this.getMdVal(mdText, 'CLIENTE|PARTE_B', 'Empresa Cliente S.A.\nNIF/CIF: A-87654321\nAv. Gran Vía 45, Madrid\ncliente@empresa.com');
+            const objeto = this.getMdVal(mdText, 'OBJETO|SERVICIO', 'Prestación de Servicios de Consultoría, Desarrollo de Software y Soporte Técnico');
+            const importe = this.getMdVal(mdText, 'IMPORTE|PRECIO', '3,500.00 EUR');
             const formaPago = this.getMdVal(mdText, 'FORMA_PAGO|PAGO', '50% al inicio de los trabajos y 50% a la entrega del proyecto.');
-
-            // Top Header Bar
-            page.drawRectangle({
-                x: 0,
-                y: H - 95,
-                width: W,
-                height: 95,
-                color: theme.headerBg
-            });
-
-            page.drawText('DOCUMENTO LEGAL DE CONTRATACION', {
-                x: 35,
-                y: H - 42,
-                size: 9.5,
-                font: fontBold,
-                color: theme.primary
-            });
-
-            page.drawText('CONTRATO DE PRESTACION DE SERVICIOS', {
-                x: 35,
-                y: H - 68,
-                size: 15,
-                font: fontBold,
-                color: rgb(1, 1, 1)
-            });
-
-            page.drawText(`Nº: ${numero}  |  FECHA: ${fecha}`, {
-                x: 35,
-                y: H - 86,
-                size: 8.5,
-                font: fontReg,
-                color: rgb(0.85, 0.9, 0.98)
-            });
-
-            let currY = H - 115;
-
-            // Parties (Prestador & Cliente) Dual Box
-            const cardW = (W - 80) / 2;
-            page.drawRectangle({
-                x: 35,
-                y: currY - 80,
-                width: cardW,
-                height: 80,
-                color: theme.bg,
-                borderColor: theme.border,
-                borderWidth: 1
-            });
-            page.drawText('EL PRESTADOR (PARTE A):', { x: 45, y: currY - 18, size: 8.5, font: fontBold, color: theme.primary });
-            page.drawText(prestador, { x: 45, y: currY - 32, size: 8, font: fontReg, color: rgb(0.2, 0.25, 0.35), lineHeight: 12 });
-
-            page.drawRectangle({
-                x: 45 + cardW,
-                y: currY - 80,
-                width: cardW,
-                height: 80,
-                color: theme.bg,
-                borderColor: theme.border,
-                borderWidth: 1
-            });
-            page.drawText('EL CLIENTE (PARTE B):', { x: 55 + cardW, y: currY - 18, size: 8.5, font: fontBold, color: theme.primary });
-            page.drawText(cliente, { x: 55 + cardW, y: currY - 32, size: 8, font: fontReg, color: rgb(0.2, 0.25, 0.35), lineHeight: 12 });
-
-            currY -= 95;
-
-            // Object & Fee summary box
-            page.drawRectangle({
-                x: 35,
-                y: currY - 45,
-                width: W - 70,
-                height: 45,
-                color: rgb(0.95, 0.97, 1),
-                borderColor: rgb(0.82, 0.86, 0.92),
-                borderWidth: 1
-            });
-
-            page.drawText(`OBJETO DEL CONTRATO: ${objeto}`, { x: 45, y: currY - 16, size: 9, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
-            page.drawText(`IMPORTE ACORDADO: ${importe}   |   FORMA DE PAGO: ${formaPago}`, { x: 45, y: currY - 34, size: 8.5, font: fontReg, color: rgb(0.3, 0.35, 0.45) });
-
-            currY -= 60;
 
             const wrapText = (text, maxChars = 84) => {
                 if (!text || text.length <= maxChars) return [text];
@@ -5501,61 +5434,206 @@ FORMA_PAGO: 50% al inicio de los trabajos y 50% a la entrega del proyecto.
                 return lines;
             };
 
-            // Clauses Header
-            page.drawText('CLAUSULAS DEL CONTRATO', { x: 35, y: currY, size: 10, font: fontBold, color: theme.primary });
-            page.drawLine({ start: { x: 35, y: currY - 4 }, end: { x: W - 35, y: currY - 4 }, thickness: 1, color: theme.primary });
-            currY -= 20;
+            // Parse Markdown Clauses by Page Block (split by ---) or default sets
+            const pageBlocks = mdText ? mdText.split(/\n\s*---\s*\n|^\s*---\s*$/m).map(b => b.trim()).filter(b => b.length > 0) : [];
 
-            // Parse Markdown Clauses
-            if (mdText) {
-                const lines = mdText.split('\n').map(l => l.trim());
+            const parseClausesFromBlock = (blockStr) => {
+                if (!blockStr) return [];
+                const clauses = [];
+                const lines = blockStr.split('\n').map(l => l.trim());
                 lines.forEach(line => {
-                    if (currY < 150) return;
-
                     if (line.startsWith('- ') || line.startsWith('* ')) {
-                        const clauseText = line.replace(/^[-*]\s+/, '').trim();
-                        const wrapped = wrapText(clauseText, 80);
-
-                        wrapped.forEach((wLine, idx) => {
-                            if (idx === 0) {
-                                page.drawText('•', { x: 42, y: currY, size: 9, font: fontBold, color: theme.primary });
-                                page.drawText(wLine, { x: 52, y: currY, size: 8.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
-                            } else {
-                                page.drawText(wLine, { x: 52, y: currY, size: 8.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
-                            }
-                            currY -= 14;
-                        });
-                        currY -= 4;
+                        clauses.push(line.replace(/^[-*]\s+/, '').trim());
                     }
                 });
+                return clauses;
+            };
+
+            let clausesP1 = pageBlocks[0] ? parseClausesFromBlock(pageBlocks[0]) : [];
+            let clausesP2 = pageBlocks[1] ? parseClausesFromBlock(pageBlocks[1]) : [];
+            let clausesP3 = pageBlocks[2] ? parseClausesFromBlock(pageBlocks[2]) : [];
+
+            // Fallback clauses if not enough blocks parsed
+            if (clausesP1.length === 0 && clausesP2.length === 0 && clausesP3.length === 0) {
+                const allClauses = parseClausesFromBlock(mdText);
+                if (allClauses.length >= 3) {
+                    clausesP1 = allClauses.slice(0, 3);
+                    clausesP2 = allClauses.slice(3, 7);
+                    clausesP3 = allClauses.slice(7);
+                }
             }
 
-            // Dual Signature Boxes (Prestador & Cliente)
-            const sigY = 110;
-            const sigBoxW = 220;
+            if (clausesP1.length === 0) {
+                clausesP1 = [
+                    'PRIMERA - OBJETO DEL CONTRATO: EL PRESTADOR se compromete a realizar para EL CLIENTE los servicios profesionales descritos en el presente documento, garantizando el cumplimiento de las especificaciones acordadas.',
+                    'SEGUNDA - PRECIO Y CONDICIONES DE PAGO: EL CLIENTE se obliga a abonar la cantidad total estipulada como IMPORTE mediante la FORMA DE PAGO acordada. El retraso en los pagos devengará un interés de demora del 5% mensual.',
+                    'TERCERA - PLAZO DE EJECUCION Y ENTREGABLES: Los trabajos darán comienzo inmediatamente a la firma del contrato y finalizarán en un plazo máximo de 60 días naturales conforme al calendario pactado.'
+                ];
+            }
+            if (clausesP2.length === 0) {
+                clausesP2 = [
+                    'CUARTA - OBLIGACIONES DEL PRESTADOR: Ejecutar los servicios con la máxima diligencia profesional, asignando personal cualificado y manteniendo informado al CLIENTE del progreso periódicamente.',
+                    'QUINTA - OBLIGACIONES DEL CLIENTE: Suministrar en tiempo y forma la información, credenciales y documentación requeridas para la correcta ejecución de los servicios prestados.',
+                    'SEXTA - PROPIEDAD INTELECTUAL Y DERECHOS: Los derechos de explotación de los desarrollos y entregables serán cedidos en exclusiva al CLIENTE una vez completado el pago total de la contraprestación.',
+                    'SEPTIMA - CONFIDENCIALIDAD Y PROTECCION DE DATOS (RGPD): Ambas partes garantizan el secreto profesional respecto a toda información confidencial y el estricto cumplimiento de la normativa vigente de protección de datos.'
+                ];
+            }
+            if (clausesP3.length === 0) {
+                clausesP3 = [
+                    'OCTAVA - CAUSAS DE RESCISION Y EXTINCION: El incumplimiento grave de cualquiera de las cláusulas otorgará a la parte afectada el derecho a rescindir unilateralmente el contrato previa notificación por escrito.',
+                    'NOVENA - MODIFICACIONES AL ACUERDO: Cualquier modificación, adenda o ampliación del alcance de este contrato requerirá acuerdo expreso firmado por ambas partes.',
+                    'DECIMA - LEY APLICABLE Y JURISDICCION: El presente contrato se rige por la legislación española. Ambas partes se someten expresamente a los Juzgados y Tribunales del lugar de celebración del contrato.'
+                ];
+            }
 
-            // Signature 1: Prestador
-            page.drawLine({ start: { x: 45, y: sigY }, end: { x: 45 + sigBoxW, y: sigY }, thickness: 1, color: rgb(0.6, 0.65, 0.75) });
-            page.drawText('FIRMA DEL PRESTADOR (Parte A)', { x: 45, y: sigY - 14, size: 8, font: fontBold, color: theme.primary });
-            page.drawText('Leído y conforme', { x: 45, y: sigY - 26, size: 7.5, font: fontReg, color: rgb(0.5, 0.55, 0.65) });
+            // ================= PAGE 1 =================
+            const page1 = doc.addPage([595.28, 841.89]);
+            page1.drawRectangle({ x: 0, y: H - 95, width: W, height: 95, color: theme.headerBg });
+            page1.drawText('DOCUMENTO LEGAL DE CONTRATACION  |  PAGINA 1 DE 3', { x: 35, y: H - 42, size: 9, font: fontBold, color: theme.primary });
+            page1.drawText('CONTRATO DE PRESTACION DE SERVICIOS', { x: 35, y: H - 68, size: 15, font: fontBold, color: rgb(1, 1, 1) });
+            page1.drawText(`Nº: ${numero}  |  FECHA: ${fecha}  |  LUGAR: ${lugar}`, { x: 35, y: H - 86, size: 8.5, font: fontReg, color: rgb(0.85, 0.9, 0.98) });
 
-            // Signature 2: Cliente
-            page.drawLine({ start: { x: W - 45 - sigBoxW, y: sigY }, end: { x: W - 45, y: sigY }, thickness: 1, color: rgb(0.6, 0.65, 0.75) });
-            page.drawText('FIRMA DEL CLIENTE (Parte B)', { x: W - 45 - sigBoxW, y: sigY - 14, size: 8, font: fontBold, color: theme.primary });
-            page.drawText('Leído y conforme', { x: W - 45 - sigBoxW, y: sigY - 26, size: 7.5, font: fontReg, color: rgb(0.5, 0.55, 0.65) });
+            let currY1 = H - 115;
+            const cardW = (W - 80) / 2;
 
-            // Footer Place & Date
-            page.drawText(`En ${lugar}, a ${fecha}. Firman ambas partes por duplicado en prueba de conformidad.`, {
-                x: 35,
-                y: 35,
-                size: 7.5,
-                font: fontReg,
-                color: rgb(0.5, 0.55, 0.65)
+            page1.drawRectangle({ x: 35, y: currY1 - 80, width: cardW, height: 80, color: theme.bg, borderColor: theme.border, borderWidth: 1 });
+            page1.drawText('EL PRESTADOR (PARTE A):', { x: 45, y: currY1 - 18, size: 8.5, font: fontBold, color: theme.primary });
+            page1.drawText(prestador, { x: 45, y: currY1 - 32, size: 8, font: fontReg, color: rgb(0.2, 0.25, 0.35), lineHeight: 12 });
+
+            page1.drawRectangle({ x: 45 + cardW, y: currY1 - 80, width: cardW, height: 80, color: theme.bg, borderColor: theme.border, borderWidth: 1 });
+            page1.drawText('EL CLIENTE (PARTE B):', { x: 55 + cardW, y: currY1 - 18, size: 8.5, font: fontBold, color: theme.primary });
+            page1.drawText(cliente, { x: 55 + cardW, y: currY1 - 32, size: 8, font: fontReg, color: rgb(0.2, 0.25, 0.35), lineHeight: 12 });
+
+            currY1 -= 95;
+
+            page1.drawRectangle({ x: 35, y: currY1 - 45, width: W - 70, height: 45, color: rgb(0.95, 0.97, 1), borderColor: rgb(0.82, 0.86, 0.92), borderWidth: 1 });
+            page1.drawText(`OBJETO DEL CONTRATO: ${objeto}`, { x: 45, y: currY1 - 16, size: 9, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+            page1.drawText(`IMPORTE ACORDADO: ${importe}   |   FORMA DE PAGO: ${formaPago}`, { x: 45, y: currY1 - 34, size: 8.5, font: fontReg, color: rgb(0.3, 0.35, 0.45) });
+
+            currY1 -= 65;
+
+            page1.drawText('PAGINA 1: CONDICIONES INICIALES Y PRIMERAS CLAUSULAS', { x: 35, y: currY1, size: 9.5, font: fontBold, color: theme.primary });
+            page1.drawLine({ start: { x: 35, y: currY1 - 4 }, end: { x: W - 35, y: currY1 - 4 }, thickness: 1, color: theme.primary });
+            currY1 -= 22;
+
+            clausesP1.forEach(clauseText => {
+                if (currY1 < 100) return;
+                const wrapped = wrapText(clauseText, 80);
+                wrapped.forEach((wLine, idx) => {
+                    if (idx === 0) {
+                        page1.drawCircle({ x: 44, y: currY1 + 3, size: 2, color: theme.primary });
+                        page1.drawText(wLine, { x: 54, y: currY1, size: 8.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                    } else {
+                        page1.drawText(wLine, { x: 54, y: currY1, size: 8.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                    }
+                    currY1 -= 14;
+                });
+                currY1 -= 6;
             });
+
+            // Page 1 Footer
+            page1.drawLine({ start: { x: 35, y: 55 }, end: { x: W - 35, y: 55 }, thickness: 0.8, color: rgb(0.85, 0.88, 0.92) });
+            page1.drawText(`Contrato Nº: ${numero}  |  Página 1 de 3`, { x: 35, y: 40, size: 8, font: fontReg, color: rgb(0.5, 0.55, 0.65) });
+            page1.drawText('Iniciales Parte A: [ _____ ]     Iniciales Parte B: [ _____ ]', { x: W - 260, y: 40, size: 8, font: fontBold, color: theme.primary });
+
+            // ================= PAGE 2 =================
+            const page2 = doc.addPage([595.28, 841.89]);
+            page2.drawRectangle({ x: 0, y: H - 65, width: W, height: 65, color: theme.headerBg });
+            page2.drawText('CONTRATO DE PRESTACION DE SERVICIOS', { x: 35, y: H - 32, size: 12, font: fontBold, color: rgb(1, 1, 1) });
+            page2.drawText(`Nº: ${numero}  |  PAGINA 2 DE 3`, { x: W - 180, y: H - 32, size: 8.5, font: fontBold, color: theme.primary });
+
+            let currY2 = H - 85;
+
+            page2.drawText('PAGINA 2: OBLIGACIONES, PROPIEDAD INTELECTUAL Y CONFIDENCIALIDAD', { x: 35, y: currY2, size: 9.5, font: fontBold, color: theme.primary });
+            page2.drawLine({ start: { x: 35, y: currY2 - 4 }, end: { x: W - 35, y: currY2 - 4 }, thickness: 1, color: theme.primary });
+            currY2 -= 25;
+
+            clausesP2.forEach(clauseText => {
+                if (currY2 < 100) return;
+                const wrapped = wrapText(clauseText, 80);
+                wrapped.forEach((wLine, idx) => {
+                    if (idx === 0) {
+                        page2.drawCircle({ x: 44, y: currY2 + 3, size: 2, color: theme.primary });
+                        page2.drawText(wLine, { x: 54, y: currY2, size: 8.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                    } else {
+                        page2.drawText(wLine, { x: 54, y: currY2, size: 8.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                    }
+                    currY2 -= 14;
+                });
+                currY2 -= 8;
+            });
+
+            // Page 2 Footer
+            page2.drawLine({ start: { x: 35, y: 55 }, end: { x: W - 35, y: 55 }, thickness: 0.8, color: rgb(0.85, 0.88, 0.92) });
+            page2.drawText(`Contrato Nº: ${numero}  |  Página 2 de 3`, { x: 35, y: 40, size: 8, font: fontReg, color: rgb(0.5, 0.55, 0.65) });
+            page2.drawText('Iniciales Parte A: [ _____ ]     Iniciales Parte B: [ _____ ]', { x: W - 260, y: 40, size: 8, font: fontBold, color: theme.primary });
+
+            // ================= PAGE 3 =================
+            const page3 = doc.addPage([595.28, 841.89]);
+            page3.drawRectangle({ x: 0, y: H - 65, width: W, height: 65, color: theme.headerBg });
+            page3.drawText('CONTRATO DE PRESTACION DE SERVICIOS', { x: 35, y: H - 32, size: 12, font: fontBold, color: rgb(1, 1, 1) });
+            page3.drawText(`Nº: ${numero}  |  PAGINA 3 DE 3`, { x: W - 180, y: H - 32, size: 8.5, font: fontBold, color: theme.primary });
+
+            let currY3 = H - 85;
+
+            page3.drawText('PAGINA 3: EXTINCION, JURISDICCION Y FIRMA FORMAL', { x: 35, y: currY3, size: 9.5, font: fontBold, color: theme.primary });
+            page3.drawLine({ start: { x: 35, y: currY3 - 4 }, end: { x: W - 35, y: currY3 - 4 }, thickness: 1, color: theme.primary });
+            currY3 -= 25;
+
+            clausesP3.forEach(clauseText => {
+                if (currY3 < 280) return;
+                const wrapped = wrapText(clauseText, 80);
+                wrapped.forEach((wLine, idx) => {
+                    if (idx === 0) {
+                        page3.drawCircle({ x: 44, y: currY3 + 3, size: 2, color: theme.primary });
+                        page3.drawText(wLine, { x: 54, y: currY3, size: 8.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                    } else {
+                        page3.drawText(wLine, { x: 54, y: currY3, size: 8.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                    }
+                    currY3 -= 14;
+                });
+                currY3 -= 8;
+            });
+
+            // Final Conformity Box
+            currY3 -= 10;
+            page3.drawRectangle({
+                x: 35,
+                y: currY3 - 40,
+                width: W - 70,
+                height: 40,
+                color: rgb(0.96, 0.97, 0.99),
+                borderColor: rgb(0.85, 0.88, 0.92),
+                borderWidth: 1
+            });
+
+            page3.drawText(`Y en prueba de conformidad con todas y cada una de las cláusulas de las 3 páginas del presente contrato,`, { x: 45, y: currY3 - 16, size: 8, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+            page3.drawText(`ambas partes firman el documento por duplicado ejemplar en ${lugar}, a ${fecha}.`, { x: 45, y: currY3 - 30, size: 8, font: fontBold, color: theme.primary });
+
+            // Large Dual Signature Area
+            const sigY3 = 130;
+            const sigBoxW = 230;
+            const sigBoxH = 80;
+
+            // Signature Box 1: Prestador
+            page3.drawRectangle({ x: 35, y: sigY3, width: sigBoxW, height: sigBoxH, color: rgb(1, 1, 1), borderColor: theme.border, borderWidth: 1 });
+            page3.drawText('POR EL PRESTADOR (Parte A)', { x: 45, y: sigY3 + sigBoxH - 16, size: 8.5, font: fontBold, color: theme.primary });
+            page3.drawLine({ start: { x: 45, y: sigY3 + 22 }, end: { x: 35 + sigBoxW - 10, y: sigY3 + 22 }, thickness: 0.8, color: rgb(0.75, 0.8, 0.88) });
+            page3.drawText('Firma y Sello Oficial', { x: 45, y: sigY3 + 8, size: 7.5, font: fontReg, color: rgb(0.5, 0.55, 0.65) });
+
+            // Signature Box 2: Cliente
+            page3.drawRectangle({ x: W - 35 - sigBoxW, y: sigY3, width: sigBoxW, height: sigBoxH, color: rgb(1, 1, 1), borderColor: theme.border, borderWidth: 1 });
+            page3.drawText('POR EL CLIENTE (Parte B)', { x: W - 25 - sigBoxW, y: sigY3 + sigBoxH - 16, size: 8.5, font: fontBold, color: theme.primary });
+            page3.drawLine({ start: { x: W - 25 - sigBoxW, y: sigY3 + 22 }, end: { x: W - 45, y: sigY3 + 22 }, thickness: 0.8, color: rgb(0.75, 0.8, 0.88) });
+            page3.drawText('Firma y Sello Oficial', { x: W - 25 - sigBoxW, y: sigY3 + 8, size: 7.5, font: fontReg, color: rgb(0.5, 0.55, 0.65) });
+
+            // Page 3 Footer
+            page3.drawLine({ start: { x: 35, y: 55 }, end: { x: W - 35, y: 55 }, thickness: 0.8, color: rgb(0.85, 0.88, 0.92) });
+            page3.drawText(`Contrato Nº: ${numero}  |  Página 3 de 3  |  Validez Legal Completa`, { x: 35, y: 40, size: 8, font: fontReg, color: rgb(0.5, 0.55, 0.65) });
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'contrato_prestacion_servicios.pdf');
-            showToast('Contrato de Prestación de Servicios generado correctamente.', 'success', isSilent);
+            showToast('Contrato de Prestación de Servicios (3 Páginas) generado correctamente.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar contrato:', err);
             showToast('Error al generar el Contrato de Prestación de Servicios.', 'danger');
