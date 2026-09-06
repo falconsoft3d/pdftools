@@ -1599,34 +1599,34 @@ SEMANA: Semana del 08 al 14 de Septiembre 2026
 OBJETIVO: Cumplir con los hitos del proyecto y rutinas de entrenamiento
 
 ## LUNES
-- 08:00 - 09:30 | Bici
-- 10:00 - 11:30 | Trici
-- 17:00 - 18:00 | Reunión de equipo
+- 08:00 - 09:30 | Bici [color:azul]
+- 10:00 - 11:30 | Trici [color:amarillo]
+- 17:00 - 18:00 | Reunión de equipo [color:verde]
 
 ## MARTES
-- 09:00 - 10:30 | Desarrollo de funcionalidades
-- 11:00 - 12:00 | Gimnasio
-- 16:00 - 17:30 | Revisión de código
+- 09:00 - 10:30 | Desarrollo de funcionalidades [color:azul]
+- 11:00 - 12:00 | Gimnasio [color:rosa]
+- 16:00 - 17:30 | Revisión de código [color:rojo]
 
 ## MIERCOLES
-- 08:30 - 09:30 | Carrera continua
-- 10:00 - 13:00 | Tareas de diseño
+- 08:30 - 09:30 | Carrera continua [color:rosa]
+- 10:00 - 13:00 | Tareas de diseño [color:morado]
 
 ## JUEVES
-- 09:00 - 11:00 | Pruebas de integración
-- 17:00 - 18:30 | Bici de montaña
+- 09:00 - 11:00 | Pruebas de integración [color:amarillo]
+- 17:00 - 18:30 | Bici de montaña [color:azul]
 
 ## VIERNES
-- 09:00 - 10:00 | Sync semanal
-- 11:00 - 13:00 | Despliegue a producción
+- 09:00 - 10:00 | Sync semanal [color:verde]
+- 11:00 - 13:00 | Despliegue a producción [color:rojo]
 
 ## SABADO
-- 09:00 - 11:00 | Ruta larga en Bici
-- 17:00 - 19:00 | Tiempo libre / Lectura
+- 09:00 - 11:00 | Ruta larga en Bici [color:azul]
+- 17:00 - 19:00 | Tiempo libre / Lectura [color:gris]
 
 ## DOMINGO
-- 10:00 - 11:30 | Caminata suave
-- 18:00 - 19:00 | Planificación semanal`;
+- 10:00 - 11:30 | Caminata suave [color:verde]
+- 18:00 - 19:00 | Planificación semanal [color:morado]`;
         } else {
             return this.getDefaultMarkdownSample();
         }
@@ -4484,13 +4484,34 @@ OBJETIVO: Cumplir con los hitos del proyecto y rutinas de entrenamiento
                         const rawItem = line.replace(/^[-*]\s+/, '').trim();
                         let timeStr = '';
                         let taskName = rawItem;
+                        let customBgColor = null;
 
-                        if (rawItem.includes('|')) {
-                            const parts = rawItem.split('|').map(p => p.trim());
+                        // Check for color tag like [color:azul], [color:verde], [color:rojo], [color:amarillo], [color:rosa], [color:#3b82f6]
+                        const colorMatch = taskName.match(/\[color:\s*([^\]]+)\]/i);
+                        if (colorMatch) {
+                            const cVal = colorMatch[1].trim().toLowerCase();
+                            if (cVal === 'azul' || cVal === 'blue') customBgColor = rgb(0.9, 0.93, 1);
+                            else if (cVal === 'verde' || cVal === 'green') customBgColor = rgb(0.9, 0.98, 0.92);
+                            else if (cVal === 'rojo' || cVal === 'red') customBgColor = rgb(1, 0.92, 0.92);
+                            else if (cVal === 'amarillo' || cVal === 'yellow') customBgColor = rgb(1, 0.98, 0.88);
+                            else if (cVal === 'rosa' || cVal === 'pink') customBgColor = rgb(1, 0.92, 0.96);
+                            else if (cVal === 'morado' || cVal === 'purple') customBgColor = rgb(0.95, 0.92, 1);
+                            else if (cVal === 'gris' || cVal === 'gray') customBgColor = rgb(0.94, 0.95, 0.96);
+                            else if (cVal.startsWith('#') && cVal.length === 7) {
+                                const r = parseInt(cVal.substring(1, 3), 16) / 255;
+                                const g = parseInt(cVal.substring(3, 5), 16) / 255;
+                                const b = parseInt(cVal.substring(5, 7), 16) / 255;
+                                if (!isNaN(r) && !isNaN(g) && !isNaN(b)) customBgColor = rgb(r, g, b);
+                            }
+                            taskName = taskName.replace(/\[color:\s*[^\]]+\]/gi, '').trim();
+                        }
+
+                        if (taskName.includes('|')) {
+                            const parts = taskName.split('|').map(p => p.trim());
                             timeStr = parts[0];
                             taskName = parts.slice(1).join(' | ');
-                        } else if (/^\d{1,2}:\d{2}/.test(rawItem)) {
-                            const timeMatch = rawItem.match(/^(\d{1,2}:\d{2}\s*(?:-\s*\d{1,2}:\d{2})?)\s*(.*)/);
+                        } else if (/^\d{1,2}:\d{2}/.test(taskName)) {
+                            const timeMatch = taskName.match(/^(\d{1,2}:\d{2}\s*(?:-\s*\d{1,2}:\d{2})?)\s*(.*)/);
                             if (timeMatch) {
                                 timeStr = timeMatch[1].trim();
                                 taskName = timeMatch[2].replace(/^[-|:]\s*/, '').trim() || timeMatch[1];
@@ -4508,6 +4529,7 @@ OBJETIVO: Cumplir con los hitos del proyecto y rutinas de entrenamiento
                         dayTasks[currentDay].push({
                             time: timeStr,
                             name: taskName,
+                            bgColor: customBgColor,
                             sortMinutes: sortMinutes
                         });
                     }
@@ -4592,9 +4614,9 @@ OBJETIVO: Cumplir con los hitos del proyecto y rutinas de entrenamiento
                         y: taskY - cardH,
                         width: colW - 6,
                         height: cardH,
-                        color: rgb(1, 1, 1),
-                        borderColor: rgb(0.85, 0.88, 0.92),
-                        borderWidth: 0.8
+                        color: t.bgColor || rgb(1, 1, 1),
+                        borderColor: t.bgColor ? theme.primary : rgb(0.85, 0.88, 0.92),
+                        borderWidth: t.bgColor ? 1 : 0.8
                     });
 
                     // Time badge line
@@ -4740,6 +4762,90 @@ OBJETIVO: Cumplir con los hitos del proyecto y rutinas de entrenamiento
         this.closeMarkdownModal = closeModal;
     }
 
+    getSavedMdDocuments() {
+        try {
+            const raw = localStorage.getItem('saved_md_documents_list');
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    saveMdDocumentLocally(name, content, templateType) {
+        if (!content || !content.trim()) {
+            showToast('El contenido Markdown está vacío.', 'warning');
+            return;
+        }
+        const docs = this.getSavedMdDocuments();
+        const docName = name || `Documento ${templateType.toUpperCase()} - ${new Date().toLocaleTimeString('es-ES')}`;
+        const existingIdx = docs.findIndex(d => d.name === docName);
+        const newDoc = {
+            id: 'doc_' + Date.now(),
+            name: docName,
+            content: content,
+            templateType: templateType || 'presentation',
+            updatedAt: new Date().toISOString()
+        };
+
+        if (existingIdx !== -1) {
+            docs[existingIdx] = newDoc;
+        } else {
+            docs.unshift(newDoc);
+        }
+
+        try {
+            localStorage.setItem('saved_md_documents_list', JSON.stringify(docs));
+            showToast(`💾 "${docName}" guardado en la memoria local (localStorage).`, 'success');
+            this.renderSavedMdDocsDropdown();
+        } catch (err) {
+            console.error('Error al guardar documento en localStorage:', err);
+            showToast('Error al guardar en memoria local.', 'danger');
+        }
+    }
+
+    deleteSavedMdDocument(id) {
+        const docs = this.getSavedMdDocuments().filter(d => d.id !== id);
+        try {
+            localStorage.setItem('saved_md_documents_list', JSON.stringify(docs));
+            showToast('Documento borrado de la memoria local.', 'info');
+            this.renderSavedMdDocsDropdown();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    downloadMdFile(filename, content) {
+        if (!content || !content.trim()) {
+            showToast('El contenido Markdown está vacío.', 'warning');
+            return;
+        }
+        const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename || `documento_${Date.now()}.md`;
+        link.click();
+        showToast(`📥 Archivo "${link.download}" descargado a tu equipo.`, 'success');
+    }
+
+    renderSavedMdDocsDropdown() {
+        const sideSelect = document.getElementById('side-saved-md-docs-select');
+        const deleteBtn = document.getElementById('btn-delete-saved-md-doc');
+        if (!sideSelect) return;
+
+        const docs = this.getSavedMdDocuments();
+        sideSelect.innerHTML = '<option value="">📁 Mis Documentos .MD Guardados...</option>';
+
+        docs.forEach(doc => {
+            const opt = document.createElement('option');
+            opt.value = doc.id;
+            const dateStr = new Date(doc.updatedAt).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+            opt.textContent = `${doc.name} (${dateStr})`;
+            sideSelect.appendChild(opt);
+        });
+
+        if (deleteBtn) deleteBtn.style.display = 'none';
+    }
+
     initMarkdownSidePanel() {
         const toggleBtn = document.getElementById('btn-toggle-md-side-panel');
         const sidePanel = document.getElementById('md-side-panel');
@@ -4750,6 +4856,81 @@ OBJETIVO: Cumplir con los hitos del proyecto y rutinas de entrenamiento
         const modalSelect = document.getElementById('modal-md-template-select');
         const uploadBtn = document.getElementById('btn-upload-side-md-file');
         const sideFileInput = document.getElementById('side-md-file-input');
+
+        const saveLocalBtn = document.getElementById('btn-save-side-md-local');
+        const downloadMdBtn = document.getElementById('btn-download-side-md-file');
+        const modalSaveLocalBtn = document.getElementById('btn-save-modal-md-local');
+        const modalDownloadMdBtn = document.getElementById('btn-download-modal-md-file');
+        const modalTextarea = document.getElementById('md-editor-textarea');
+
+        const savedDocsSelect = document.getElementById('side-saved-md-docs-select');
+        const deleteSavedDocBtn = document.getElementById('btn-delete-saved-md-doc');
+
+        this.renderSavedMdDocsDropdown();
+
+        // Handle Saved Documents Selection
+        savedDocsSelect?.addEventListener('change', (e) => {
+            const docId = e.target.value;
+            if (!docId) {
+                if (deleteSavedDocBtn) deleteSavedDocBtn.style.display = 'none';
+                return;
+            }
+
+            const docs = this.getSavedMdDocuments();
+            const selectedDoc = docs.find(d => d.id === docId);
+
+            if (selectedDoc) {
+                if (deleteSavedDocBtn) deleteSavedDocBtn.style.display = 'inline-flex';
+                if (sideTextarea) sideTextarea.value = selectedDoc.content;
+                if (sideSelect && selectedDoc.templateType) {
+                    sideSelect.value = selectedDoc.templateType;
+                    this.currentTemplateType = selectedDoc.templateType;
+                }
+                this.currentMarkdownText = selectedDoc.content;
+                localStorage.setItem('saved_presentation_md', selectedDoc.content);
+                showToast(`📄 Documento "${selectedDoc.name}" cargado desde la memoria local.`, 'success');
+                handleUpdate(false);
+            }
+        });
+
+        // Delete Saved Document Button
+        deleteSavedDocBtn?.addEventListener('click', () => {
+            const docId = savedDocsSelect?.value;
+            if (docId && confirm('¿Deseas eliminar este documento guardado de la memoria local?')) {
+                this.deleteSavedMdDocument(docId);
+            }
+        });
+
+        // Save local actions
+        const promptAndSave = (textareaElem) => {
+            const content = textareaElem?.value || '';
+            if (!content.trim()) {
+                showToast('El contenido Markdown está vacío.', 'warning');
+                return;
+            }
+            const type = this.currentTemplateType || 'documento';
+            const defaultName = `Mi ${type.toUpperCase()} - ${new Date().toLocaleDateString('es-ES')}`;
+            const userDocName = prompt('Escribe un nombre para guardar tu documento en la memoria local (localStorage):', defaultName);
+            if (userDocName !== null) {
+                this.saveMdDocumentLocally(userDocName.trim() || defaultName, content, type);
+            }
+        };
+
+        saveLocalBtn?.addEventListener('click', () => promptAndSave(sideTextarea));
+        modalSaveLocalBtn?.addEventListener('click', () => promptAndSave(modalTextarea));
+
+        // Download .md actions
+        downloadMdBtn?.addEventListener('click', () => {
+            const content = sideTextarea?.value || '';
+            const type = this.currentTemplateType || 'documento';
+            this.downloadMdFile(`${type}_${Date.now()}.md`, content);
+        });
+
+        modalDownloadMdBtn?.addEventListener('click', () => {
+            const content = modalTextarea?.value || '';
+            const type = this.currentTemplateType || 'documento';
+            this.downloadMdFile(`${type}_${Date.now()}.md`, content);
+        });
 
         sideSelect?.addEventListener('change', (e) => {
             const selectedType = e.target.value;

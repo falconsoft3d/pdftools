@@ -303,9 +303,18 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                             <span style="font-weight: 600; font-size: 0.88rem; color: var(--text-main);"><i class="fab fa-markdown" style="color: #60a5fa;"></i> Editor Markdown (.md)</span>
                             <div style="display: flex; gap: 0.35rem;">
+                                <button id="btn-save-side-md-local" class="btn btn-secondary btn-icon btn-xs" title="Guardar documento .md en lista local de borradores (localStorage)"><i class="fas fa-save" style="color: #38bdf8;"></i></button>
+                                <button id="btn-download-side-md-file" class="btn btn-secondary btn-icon btn-xs" title="Descargar archivo .md a tu equipo / carpeta"><i class="fas fa-download" style="color: #4ade80;"></i></button>
                                 <button id="btn-upload-side-md-file" class="btn btn-secondary btn-icon btn-xs" title="Cargar archivo .md desde tu equipo"><i class="fas fa-file-upload"></i></button>
                                 <button id="btn-close-md-side-panel" class="btn btn-secondary btn-icon btn-xs" title="Cerrar Panel Markdown"><i class="fas fa-times"></i></button>
                             </div>
+                        </div>
+                        <!-- Saved MD Documents Selector (localStorage) -->
+                        <div style="margin-bottom: 0.4rem; display: flex; gap: 0.35rem; align-items: center;">
+                            <select id="side-saved-md-docs-select" class="form-input" style="font-size: 0.78rem; padding: 0.25rem 0.4rem; flex: 1;" title="Documentos .md guardados localmente">
+                                <option value="">📁 Mis Documentos .MD Guardados...</option>
+                            </select>
+                            <button id="btn-delete-saved-md-doc" class="btn btn-danger btn-icon btn-xs" style="display: none;" title="Eliminar documento .md seleccionado de la memoria local"><i class="fas fa-trash-alt"></i></button>
                         </div>
                         <div style="margin-bottom: 0.5rem;">
                             <select id="side-md-template-select" class="form-input" style="font-size: 0.8rem; padding: 0.3rem 0.5rem;" title="Cambiar tipo de plantilla Markdown">
@@ -576,13 +585,15 @@
                             <option value="weekly-calendar">📅 S - Calendario Semanal / Weekly Planner</option>
                         </select>
                     </div>
-                    <div style="display: flex; gap: 0.5rem;">
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <button id="btn-save-modal-md-local" class="btn btn-secondary btn-sm" title="Guardar .md en borradores de la memoria local"><i class="fas fa-save" style="color: #38bdf8;"></i> Guardar .MD</button>
+                        <button id="btn-download-modal-md-file" class="btn btn-secondary btn-sm" title="Descargar archivo .md a tu equipo"><i class="fas fa-download" style="color: #4ade80;"></i> Descargar .MD</button>
                         <input type="file" id="md-file-input" accept=".md,.markdown,.txt" style="display: none;">
                         <button id="btn-upload-md-file" class="btn btn-secondary btn-sm" title="Subir archivo .md desde tu equipo">
-                            <i class="fas fa-file-upload"></i> Cargar archivo .md
+                            <i class="fas fa-file-upload"></i> Cargar .MD
                         </button>
                         <button id="btn-reset-sample-md" class="btn btn-secondary btn-sm" title="Restaurar la plantilla de ejemplo en Markdown">
-                            <i class="fas fa-undo"></i> Cargar Ejemplo
+                            <i class="fas fa-undo"></i> Ejemplo
                         </button>
                     </div>
                 </div>
