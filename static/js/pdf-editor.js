@@ -2352,6 +2352,49 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
         }
     }
 
+    async generateQrCodeDataUrl(text) {
+        if (!text || !text.trim()) text = 'https://www.marlonfalcon.com';
+        return new Promise((resolve) => {
+            try {
+                const tempDiv = document.createElement('div');
+                tempDiv.style.position = 'absolute';
+                tempDiv.style.left = '-9999px';
+                tempDiv.style.top = '-9999px';
+                document.body.appendChild(tempDiv);
+
+                if (window.QRCode) {
+                    new QRCode(tempDiv, {
+                        text: text.trim(),
+                        width: 320,
+                        height: 320,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: window.QRCode.CorrectLevel ? window.QRCode.CorrectLevel.H : 2
+                    });
+
+                    setTimeout(() => {
+                        const canvas = tempDiv.querySelector('canvas');
+                        const img = tempDiv.querySelector('img');
+                        let dataUrl = null;
+                        if (canvas) {
+                            dataUrl = canvas.toDataURL('image/png');
+                        } else if (img && img.src && img.src.startsWith('data:image')) {
+                            dataUrl = img.src;
+                        }
+                        tempDiv.remove();
+                        resolve(dataUrl);
+                    }, 50);
+                } else {
+                    tempDiv.remove();
+                    resolve(null);
+                }
+            } catch (err) {
+                console.error('Error al generar código QR:', err);
+                resolve(null);
+            }
+        });
+    }
+
     async createQrPosterTemplate(mdText, isSilent = false) {
         showToast('Generando Cartel con Texto y Código QR...', 'info', isSilent);
         try {
@@ -2398,7 +2441,7 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
                 color: rgb(0.8, 0.8, 0.8)
             });
 
-            // Simulated High Resolution Vector QR Code
+            // Dynamic Real QR Code Generation
             const qrX = W / 2 - 120;
             const qrY = H - 430;
             const qrSize = 240;
@@ -2414,31 +2457,45 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
                 color: rgb(1, 1, 1)
             });
 
-            // QR Outer Squares (Corners)
-            const drawQrFinderPattern = (fx, fy) => {
-                page.drawRectangle({ x: fx, y: fy, width: 50, height: 50, color: rgb(0, 0, 0) });
-                page.drawRectangle({ x: fx + 7, y: fy + 7, width: 36, height: 36, color: rgb(1, 1, 1) });
-                page.drawRectangle({ x: fx + 14, y: fy + 14, width: 22, height: 22, color: rgb(0, 0, 0) });
-            };
+            const qrDataUrl = await this.generateQrCodeDataUrl(urlQr);
 
-            drawQrFinderPattern(qrX + 10, qrY + qrSize - 60);
-            drawQrFinderPattern(qrX + qrSize - 60, qrY + qrSize - 60);
-            drawQrFinderPattern(qrX + 10, qrY + 10);
+            if (qrDataUrl) {
+                const qrBytes = dataUrlToBytes(qrDataUrl);
+                if (qrBytes) {
+                    const qrImg = await doc.embedPng(qrBytes);
+                    page.drawImage(qrImg, {
+                        x: qrX,
+                        y: qrY,
+                        width: qrSize,
+                        height: qrSize
+                    });
+                }
+            } else {
+                // Fallback to vector grid pattern
+                const drawQrFinderPattern = (fx, fy) => {
+                    page.drawRectangle({ x: fx, y: fy, width: 50, height: 50, color: rgb(0, 0, 0) });
+                    page.drawRectangle({ x: fx + 7, y: fy + 7, width: 36, height: 36, color: rgb(1, 1, 1) });
+                    page.drawRectangle({ x: fx + 14, y: fy + 14, width: 22, height: 22, color: rgb(0, 0, 0) });
+                };
 
-            // Grid pattern
-            const gridCells = 16;
-            const cellSize = qrSize / gridCells;
-            for (let r = 0; r < gridCells; r++) {
-                for (let c = 0; c < gridCells; c++) {
-                    if ((r < 4 && c < 4) || (r < 4 && c > 11) || (r > 11 && c < 4)) continue;
-                    if ((r + c * 3 + (r * c)) % 3 === 0 || (r * 2 + c) % 5 === 0) {
-                        page.drawRectangle({
-                            x: qrX + c * cellSize,
-                            y: qrY + r * cellSize,
-                            width: cellSize,
-                            height: cellSize,
-                            color: rgb(0, 0, 0)
-                        });
+                drawQrFinderPattern(qrX + 10, qrY + qrSize - 60);
+                drawQrFinderPattern(qrX + qrSize - 60, qrY + qrSize - 60);
+                drawQrFinderPattern(qrX + 10, qrY + 10);
+
+                const gridCells = 16;
+                const cellSize = qrSize / gridCells;
+                for (let r = 0; r < gridCells; r++) {
+                    for (let c = 0; c < gridCells; c++) {
+                        if ((r < 4 && c < 4) || (r < 4 && c > 11) || (r > 11 && c < 4)) continue;
+                        if ((r + c * 3 + (r * c)) % 3 === 0 || (r * 2 + c) % 5 === 0) {
+                            page.drawRectangle({
+                                x: qrX + c * cellSize,
+                                y: qrY + r * cellSize,
+                                width: cellSize,
+                                height: cellSize,
+                                color: rgb(0, 0, 0)
+                            });
+                        }
                     }
                 }
             }
