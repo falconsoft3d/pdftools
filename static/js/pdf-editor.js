@@ -1627,6 +1627,24 @@ OBJETIVO: Cumplir con los hitos del proyecto y rutinas de entrenamiento
 ## DOMINGO
 - 10:00 - 11:30 | Caminata suave [color:verde]
 - 18:00 - 19:00 | Planificación semanal [color:morado]`;
+        } else if (type === 'code-flowchart' || type === 'flowchart') {
+            return `# FLUJO DE PROGRAMACION / ALGORITMO
+ESTILO: 1
+PROYECTO: Sistema de Autenticación y Verificación de Usuarios
+AUTOR: Marlon Falcón Hernández
+FECHA: 06 / 09 / 2026
+
+## PASOS DEL ALGORITMO
+- [INICIO] Inicio del Proceso de Autenticación
+- [ENTRADA] Usuario ingresa Email y Contraseña
+- [PROCESO] Validar formato de Email y sanitizar entrada
+- [DECISION] ¿Credenciales válidas en Base de Datos?
+  * [SI] Generar Token JWT de Sesión
+  * [NO] Incrementar contador de intentos fallidos
+- [DECISION] ¿Intentos fallidos >= 3?
+  * [SI] Bloquear cuenta por 15 minutos
+  * [NO] Mostrar mensaje "Credenciales incorrectas"
+- [FIN] Fin del Proceso`;
         } else {
             return this.getDefaultMarkdownSample();
         }
@@ -4711,6 +4729,393 @@ OBJETIVO: Cumplir con los hitos del proyecto y rutinas de entrenamiento
         }
     }
 
+    async createCodeFlowchartTemplate(mdText, isSilent = false) {
+        showToast('Generando Flujo de Programación / Flowchart...', 'info', isSilent);
+        try {
+            const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            const page = doc.addPage([595.28, 841.89]); // A4 Portrait
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+            const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+
+            const W = 595.28;
+            const H = 841.89;
+
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
+            const titulo = this.getMdVal(mdText, 'TITULO|HEADER', 'FLUJO DE PROGRAMACION / ALGORITMO');
+            const proyecto = this.getMdVal(mdText, 'PROYECTO', 'Sistema de Autenticación y Verificación de Usuarios');
+            const autor = this.getMdVal(mdText, 'AUTOR', 'Marlon Falcón Hernández');
+            const fecha = this.getMdVal(mdText, 'FECHA', new Date().toLocaleDateString('es-ES'));
+
+            // Top Header Bar
+            page.drawRectangle({
+                x: 35,
+                y: H - 95,
+                width: W - 70,
+                height: 65,
+                color: theme.headerBg
+            });
+
+            page.drawText('DIAGRAMA DE FLUJO DE LOGICA / FLOWCHART', {
+                x: 50,
+                y: H - 52,
+                size: 9.5,
+                font: fontBold,
+                color: theme.primary
+            });
+
+            page.drawText(titulo, {
+                x: 50,
+                y: H - 75,
+                size: 13,
+                font: fontBold,
+                color: rgb(1, 1, 1)
+            });
+
+            page.drawText(`PROYECTO: ${proyecto}`, { x: W - 260, y: H - 52, size: 8.5, font: fontBold, color: theme.primary });
+            page.drawText(`AUTOR: ${autor}  |  FECHA: ${fecha}`, { x: W - 260, y: H - 72, size: 8, font: fontReg, color: rgb(0.85, 0.9, 0.98) });
+
+            let currY = H - 125;
+
+            // Parse Flowchart Steps
+            const steps = [];
+            if (mdText) {
+                const lines = mdText.split('\n');
+                let lastParent = null;
+
+                lines.forEach(line => {
+                    const trimmed = line.trim();
+                    if (trimmed.startsWith('- ') || trimmed.startsWith('* ') || /^\d+\.\s+/.test(trimmed)) {
+                        const isIndented = line.startsWith('  ') || line.startsWith('\t');
+                        const raw = trimmed.replace(/^[-*0-9.]+\s+/, '').trim();
+
+                        let type = 'process'; // process, start, end, decision, input, output
+                        let cleanText = raw;
+
+                        if (/^\[(INICIO|START)\]/i.test(cleanText)) {
+                            type = 'start';
+                            cleanText = cleanText.replace(/^\[(INICIO|START)\]\s*/i, '');
+                        } else if (/^\[(FIN|END)\]/i.test(cleanText)) {
+                            type = 'end';
+                            cleanText = cleanText.replace(/^\[(FIN|END)\]\s*/i, '');
+                        } else if (/^\[(DECISION|DECISIÓN)\]/i.test(cleanText) || cleanText.includes('?')) {
+                            type = 'decision';
+                            cleanText = cleanText.replace(/^\[(DECISION|DECISIÓN)\]\s*/i, '');
+                        } else if (/^\[(ENTRADA|INPUT)\]/i.test(cleanText)) {
+                            type = 'input';
+                            cleanText = cleanText.replace(/^\[(ENTRADA|INPUT)\]\s*/i, '');
+                        } else if (/^\[(SALIDA|OUTPUT)\]/i.test(cleanText)) {
+                            type = 'output';
+                            cleanText = cleanText.replace(/^\[(SALIDA|OUTPUT)\]\s*/i, '');
+                        } else if (/^\[(PROCESO|PROCESS)\]/i.test(cleanText)) {
+                            type = 'process';
+                            cleanText = cleanText.replace(/^\[(PROCESO|PROCESS)\]\s*/i, '');
+                        }
+
+                        let branchLabel = '';
+                        if (/^\[(SI|YES|SÍ)\]/i.test(cleanText)) {
+                            branchLabel = 'SÍ';
+                            cleanText = cleanText.replace(/^\[(SI|YES|SÍ)\]\s*/i, '');
+                        } else if (/^\[(NO)\]/i.test(cleanText)) {
+                            branchLabel = 'NO';
+                            cleanText = cleanText.replace(/^\[(NO)\]\s*/i, '');
+                        }
+
+                        const stepObj = {
+                            type,
+                            text: cleanText,
+                            branchLabel,
+                            subBranches: []
+                        };
+
+                        if ((isIndented || branchLabel) && lastParent && lastParent.type === 'decision') {
+                            lastParent.subBranches.push(stepObj);
+                        } else {
+                            steps.push(stepObj);
+                            lastParent = stepObj;
+                        }
+                    }
+                });
+            }
+
+            // Fallback steps if empty
+            if (steps.length === 0) {
+                steps.push(
+                    { type: 'start', text: 'Inicio del Proceso', branchLabel: '', subBranches: [] },
+                    { type: 'input', text: 'Usuario ingresa Email y Contraseña', branchLabel: '', subBranches: [] },
+                    { type: 'process', text: 'Validar formato y sanitizar datos', branchLabel: '', subBranches: [] },
+                    { 
+                        type: 'decision', 
+                        text: '¿Credenciales válidas en BD?', 
+                        branchLabel: '', 
+                        subBranches: [
+                            { type: 'process', text: 'Generar Token JWT y redirigir', branchLabel: 'SÍ', subBranches: [] },
+                            { type: 'process', text: 'Incrementar contador de errores', branchLabel: 'NO', subBranches: [] }
+                        ] 
+                    },
+                    { type: 'end', text: 'Fin del Proceso', branchLabel: '', subBranches: [] }
+                );
+            }
+
+            // Draw Flowchart Steps
+            const centerX = W / 2;
+
+            steps.forEach((step, idx) => {
+                if (currY < 60) return;
+
+                // Draw arrow connecting from previous step
+                if (idx > 0) {
+                    page.drawLine({
+                        start: { x: centerX, y: currY + 6 },
+                        end: { x: centerX, y: currY - 8 },
+                        thickness: 1.5,
+                        color: theme.primary
+                    });
+
+                    // Arrow head
+                    page.drawText('v', {
+                        x: centerX - 3,
+                        y: currY - 11,
+                        size: 10,
+                        font: fontBold,
+                        color: theme.primary
+                    });
+
+                    currY -= 16;
+                }
+
+                if (step.type === 'start' || step.type === 'end') {
+                    // Pill / Capsule Shape
+                    const isStart = step.type === 'start';
+                    const boxW = Math.min(320, Math.max(160, step.text.length * 7 + 30));
+                    const boxH = 28;
+                    const boxX = centerX - boxW / 2;
+                    const boxY = currY - boxH;
+                    const pillColor = isStart ? rgb(0.05, 0.65, 0.41) : rgb(0.86, 0.15, 0.15);
+
+                    page.drawRectangle({
+                        x: boxX,
+                        y: boxY,
+                        width: boxW,
+                        height: boxH,
+                        color: pillColor,
+                        borderColor: pillColor,
+                        borderWidth: 1
+                    });
+
+                    page.drawText(isStart ? '● INICIO' : '■ FIN', {
+                        x: boxX + 12,
+                        y: boxY + 8,
+                        size: 9,
+                        font: fontBold,
+                        color: rgb(1, 1, 1)
+                    });
+
+                    page.drawText(step.text, {
+                        x: boxX + 60,
+                        y: boxY + 8,
+                        size: 9.5,
+                        font: fontBold,
+                        color: rgb(1, 1, 1)
+                    });
+
+                    currY -= (boxH + 6);
+
+                } else if (step.type === 'decision') {
+                    // Rhombus / Decision Block
+                    const boxW = Math.min(340, Math.max(220, step.text.length * 6.5 + 30));
+                    const boxH = 34;
+                    const boxX = centerX - boxW / 2;
+                    const boxY = currY - boxH;
+
+                    page.drawRectangle({
+                        x: boxX,
+                        y: boxY,
+                        width: boxW,
+                        height: boxH,
+                        color: rgb(1, 0.98, 0.88),
+                        borderColor: rgb(0.96, 0.62, 0.04),
+                        borderWidth: 2
+                    });
+
+                    page.drawText('◆ DECISION', {
+                        x: boxX + 10,
+                        y: boxY + 11,
+                        size: 8.5,
+                        font: fontBold,
+                        color: rgb(0.8, 0.5, 0)
+                    });
+
+                    page.drawText(step.text, {
+                        x: boxX + 80,
+                        y: boxY + 11,
+                        size: 9.5,
+                        font: fontBold,
+                        color: rgb(0.2, 0.15, 0)
+                    });
+
+                    currY -= (boxH + 8);
+
+                    // Render Sub-Branches Side-by-Side if present
+                    if (step.subBranches.length > 0) {
+                        const numBranches = step.subBranches.length;
+                        const subW = 220;
+                        const subH = 32;
+                        const branchGap = 20;
+
+                        let startBranchX;
+                        if (numBranches === 2) {
+                            startBranchX = centerX - subW - (branchGap / 2);
+                        } else {
+                            startBranchX = centerX - subW / 2;
+                        }
+
+                        // Branch connector horizontal line
+                        if (numBranches === 2) {
+                            const leftX = startBranchX + subW / 2;
+                            const rightX = startBranchX + subW + branchGap + subW / 2;
+                            page.drawLine({
+                                start: { x: leftX, y: currY + 4 },
+                                end: { x: rightX, y: currY + 4 },
+                                thickness: 1.5,
+                                color: rgb(0.96, 0.62, 0.04)
+                            });
+                        }
+
+                        step.subBranches.forEach((sb, sbIdx) => {
+                            const sbX = (numBranches === 2) ? (startBranchX + sbIdx * (subW + branchGap)) : (centerX - subW / 2);
+                            const sbY = currY - subH;
+                            const isYes = sb.branchLabel === 'SÍ';
+                            const badgeColor = isYes ? rgb(0.05, 0.65, 0.41) : rgb(0.86, 0.15, 0.15);
+
+                            // Connector vertical line
+                            page.drawLine({
+                                start: { x: sbX + subW / 2, y: currY + 4 },
+                                end: { x: sbX + subW / 2, y: sbY + subH },
+                                thickness: 1.5,
+                                color: badgeColor
+                            });
+
+                            // Sub-branch Card
+                            page.drawRectangle({
+                                x: sbX,
+                                y: sbY,
+                                width: subW,
+                                height: subH,
+                                color: rgb(0.98, 0.99, 1),
+                                borderColor: badgeColor,
+                                borderWidth: 1.5
+                            });
+
+                            // Branch Label Badge (SÍ / NO)
+                            if (sb.branchLabel) {
+                                page.drawRectangle({
+                                    x: sbX + 5,
+                                    y: sbY + 6,
+                                    width: 22,
+                                    height: 18,
+                                    color: badgeColor
+                                });
+                                page.drawText(sb.branchLabel, {
+                                    x: sbX + (isYes ? 8 : 7),
+                                    y: sbY + 11,
+                                    size: 8,
+                                    font: fontBold,
+                                    color: rgb(1, 1, 1)
+                                });
+                            }
+
+                            page.drawText(sb.text, {
+                                x: sbX + (sb.branchLabel ? 32 : 8),
+                                y: sbY + 11,
+                                size: 8.5,
+                                font: fontReg,
+                                color: rgb(0.15, 0.2, 0.3)
+                            });
+                        });
+
+                        currY -= (subH + 8);
+                    }
+
+                } else {
+                    // Process / Input / Output Normal Block
+                    const boxW = Math.min(360, Math.max(220, step.text.length * 6 + 30));
+                    const boxH = 28;
+                    const boxX = centerX - boxW / 2;
+                    const boxY = currY - boxH;
+                    const isInput = step.type === 'input' || step.type === 'output';
+
+                    page.drawRectangle({
+                        x: boxX,
+                        y: boxY,
+                        width: boxW,
+                        height: boxH,
+                        color: isInput ? rgb(0.92, 0.96, 1) : theme.bg,
+                        borderColor: isInput ? rgb(0.23, 0.7, 0.96) : theme.primary,
+                        borderWidth: 1.2
+                    });
+
+                    // Type Indicator Badge
+                    let badgeText = 'PROCESO';
+                    let badgeColor = theme.primary;
+                    if (step.type === 'input') {
+                        badgeText = 'ENTRADA';
+                        badgeColor = rgb(0.23, 0.7, 0.96);
+                    } else if (step.type === 'output') {
+                        badgeText = 'SALIDA';
+                        badgeColor = rgb(0.55, 0.27, 0.85);
+                    }
+
+                    page.drawText(`[${badgeText}]`, {
+                        x: boxX + 8,
+                        y: boxY + 9,
+                        size: 8,
+                        font: fontBold,
+                        color: badgeColor
+                    });
+
+                    page.drawText(step.text, {
+                        x: boxX + 66,
+                        y: boxY + 9,
+                        size: 9,
+                        font: fontReg,
+                        color: rgb(0.15, 0.2, 0.3)
+                    });
+
+                    currY -= (boxH + 6);
+                }
+            });
+
+            // Legend Footer
+            page.drawRectangle({
+                x: 35,
+                y: 20,
+                width: W - 70,
+                height: 24,
+                color: rgb(0.96, 0.97, 0.99),
+                borderColor: rgb(0.88, 0.9, 0.94),
+                borderWidth: 0.8
+            });
+
+            page.drawText('SIMBOLOGIA:  ● Inicio/Fin (Verde/Rojo)  |  ◆ Decisión (Ámbar)  |  ■ Proceso (Azul)  |  ■ Entrada/Salida (Cian)', {
+                x: 45,
+                y: 27,
+                size: 8,
+                font: fontReg,
+                color: rgb(0.3, 0.35, 0.45)
+            });
+
+            const bytes = await doc.save();
+            await this.loadPDFBytes(bytes, 'flujo_programacion.pdf');
+            showToast('Flujo de Programación / Flowchart generado correctamente desde Markdown.', 'success', isSilent);
+        } catch (err) {
+            console.error('Error al generar flujo de programación:', err);
+            showToast('Error al generar el Diagrama de Flujo.', 'danger');
+        }
+    }
+
     initMarkdownModal() {
         const modal = document.getElementById('markdown-modal');
         const openHeaderBtn = document.getElementById('btn-open-markdown-modal');
@@ -5163,6 +5568,9 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
             return;
         } else if (templateType === 'weekly-calendar' || templateType === 'calendar') {
             await this.createWeeklyCalendarTemplate(mdText, isSilent);
+            return;
+        } else if (templateType === 'code-flowchart' || templateType === 'flowchart') {
+            await this.createCodeFlowchartTemplate(mdText, isSilent);
             return;
         }
 
