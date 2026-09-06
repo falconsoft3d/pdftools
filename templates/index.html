@@ -51,6 +51,9 @@
             <button id="btn-create-blank-pdf" class="btn btn-secondary" title="Crear un nuevo documento PDF en blanco">
                 <i class="fas fa-file-medical"></i> Nuevo PDF
             </button>
+            <button id="btn-open-markdown-modal" class="btn btn-secondary" title="Crear o editar presentación desde un archivo Markdown (.md)">
+                <i class="fas fa-file-powerpoint" style="color: #60a5fa;"></i> Presentación .MD
+            </button>
             <button id="btn-header-open-pdf" class="btn btn-secondary">
                 <i class="fas fa-folder-open"></i> Abrir PDF
             </button>
@@ -443,6 +446,49 @@
                 </button>
                 <button id="btn-use-sig-now" class="btn btn-primary">
                     <i class="fas fa-check"></i> Usar e Insertar en PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Markdown Presentation (.md) -->
+    <div class="modal-backdrop" id="markdown-modal">
+        <div class="modal-card" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-file-powerpoint" style="color: var(--accent-primary);"></i> Editar Presentación con Markdown (.md)</h3>
+                <button class="btn btn-secondary btn-icon btn-sm" id="btn-close-markdown-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; flex: 1; min-width: 250px;">
+                        Escribe o carga un archivo <strong>.md</strong>. Separa las diapositivas con tres guiones (<code>---</code>).
+                    </p>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="file" id="md-file-input" accept=".md,.markdown,.txt" style="display: none;">
+                        <button id="btn-upload-md-file" class="btn btn-secondary btn-sm" title="Subir archivo .md desde tu equipo">
+                            <i class="fas fa-file-upload"></i> Cargar archivo .md
+                        </button>
+                        <button id="btn-reset-sample-md" class="btn btn-secondary btn-sm" title="Restaurar la plantilla de ejemplo en Markdown">
+                            <i class="fas fa-undo"></i> Cargar Ejemplo
+                        </button>
+                    </div>
+                </div>
+
+                <textarea id="md-editor-textarea" class="form-input" rows="15" style="font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.88rem; line-height: 1.5; white-space: pre; resize: vertical; width: 100%; box-sizing: border-box; background-color: #0f172a; color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.75rem;"></textarea>
+
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <span><i class="fas fa-heading" style="color: var(--accent-primary);"></i> <code># Título</code> / <code>## Subtítulo</code></span>
+                    <span><i class="fas fa-list" style="color: var(--accent-primary);"></i> <code>- Elemento de lista</code></span>
+                    <span><i class="fas fa-quote-left" style="color: var(--accent-primary);"></i> <code>> Cita o frase</code></span>
+                    <span><i class="fas fa-columns" style="color: var(--accent-primary);"></i> <code>---</code> Separa diapositivas</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-cancel-markdown-modal" class="btn btn-secondary">Cancelar</button>
+                <button id="btn-generate-markdown-pdf" class="btn btn-primary">
+                    <i class="fas fa-file-powerpoint"></i> Generar Presentación PDF
                 </button>
             </div>
         </div>

@@ -323,6 +323,9 @@ class PDFEditor {
             window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
 
+        // Initialize Markdown Presentation modal
+        this.initMarkdownModal();
+
         // File upload listeners
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
@@ -2619,99 +2622,330 @@ class PDFEditor {
         }
     }
 
+    initMarkdownModal() {
+        const modal = document.getElementById('markdown-modal');
+        const openHeaderBtn = document.getElementById('btn-open-markdown-modal');
+        const closeBtn = document.getElementById('btn-close-markdown-modal');
+        const cancelBtn = document.getElementById('btn-cancel-markdown-modal');
+        const generateBtn = document.getElementById('btn-generate-markdown-pdf');
+        const textarea = document.getElementById('md-editor-textarea');
+        const fileInput = document.getElementById('md-file-input');
+        const uploadBtn = document.getElementById('btn-upload-md-file');
+        const resetSampleBtn = document.getElementById('btn-reset-sample-md');
+
+        const openModal = () => {
+            if (!textarea) return;
+            const savedMd = localStorage.getItem('saved_presentation_md');
+            if (savedMd && savedMd.trim()) {
+                textarea.value = savedMd;
+            } else {
+                textarea.value = this.getDefaultMarkdownSample();
+            }
+            modal?.classList.add('show');
+        };
+
+        const closeModal = () => {
+            modal?.classList.remove('show');
+        };
+
+        openHeaderBtn?.addEventListener('click', openModal);
+        closeBtn?.addEventListener('click', closeModal);
+        cancelBtn?.addEventListener('click', closeModal);
+
+        uploadBtn?.addEventListener('click', () => {
+            if (fileInput) {
+                fileInput.value = '';
+                fileInput.click();
+            }
+        });
+
+        fileInput?.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const text = evt.target.result;
+                    if (textarea) textarea.value = text;
+                    localStorage.setItem('saved_presentation_md', text);
+                    showToast(`Archivo "${file.name}" cargado en el editor Markdown.`, 'success');
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        resetSampleBtn?.addEventListener('click', () => {
+            if (textarea) {
+                textarea.value = this.getDefaultMarkdownSample();
+                localStorage.setItem('saved_presentation_md', textarea.value);
+                showToast('Plantilla Markdown de ejemplo cargada.', 'info');
+            }
+        });
+
+        generateBtn?.addEventListener('click', async () => {
+            const mdText = textarea?.value || '';
+            if (!mdText.trim()) {
+                showToast('El contenido Markdown está vacío.', 'warning');
+                return;
+            }
+            localStorage.setItem('saved_presentation_md', mdText);
+            closeModal();
+            await this.createPresentationFromMarkdown(mdText);
+        });
+
+        this.openMarkdownModal = openModal;
+        this.closeMarkdownModal = closeModal;
+    }
+
+    getDefaultMarkdownSample() {
+        return `# PRESENTACION DE PROYECTO
+## Informe de Resultados, Objetivos Estrategicos y Hoja de Ruta 2026
+AUTOR: Marlon Falcon Hernandez
+SITIO WEB: www.marlonfalcon.com
+FECHA: 06 de Septiembre de 2026
+
+---
+
+# SLIDE 2: CONTENIDO PRINCIPAL Y DETALLES
+## TITULO DE LA SECCION / TEMA PRINCIPAL
+
+Este apartado esta disenado para presentar un texto explicativo claro y directo.
+
+PUNTOS DESTACADOS DEL PROYECTO:
+- Primer objetivo: Definir el alcance y requerimientos funcionales.
+- Segundo objetivo: Implementar una solucion modular sin dependencias externas.
+- Tercer objetivo: Garantizar la maxima calidad para los usuarios.
+
+Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para presentaciones como para impresion.
+
+---
+
+# SLIDE 3: CONCLUSIONES Y PROXIMOS PASOS
+## RESUMEN Y CONCLUSIONES CLAVE
+
+1. La ejecucion 100% local garantiza la privacidad absoluta de los archivos PDF.
+2. El rendimiento de renderizado y edicion se mantiene fluido sin dependencia de la nube.
+3. La plataforma integra todas las herramientas necesarias para firma, edicion y diseno.
+
+> "La simplicidad y el procesamiento local ofrecen la mejor experiencia de usuario."`;
+    }
+
     async createPresentationTemplate() {
-        showToast('Generando plantilla de Presentación (3 Páginas)...', 'info');
+        if (typeof this.openMarkdownModal === 'function') {
+            this.openMarkdownModal();
+        } else {
+            await this.createPresentationFromMarkdown(this.getDefaultMarkdownSample());
+        }
+    }
+
+    async createPresentationFromMarkdown(mdText) {
+        if (!mdText || !mdText.trim()) {
+            showToast('El contenido Markdown está vacío.', 'warning');
+            return;
+        }
+
+        showToast('Generando presentación PDF desde Markdown...', 'info');
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
             const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
             const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+            const fontOblique = await doc.embedFont(StandardFonts.HelveticaOblique);
 
             const W = 841.89; // A4 Landscape
             const H = 595.28;
 
-            // Slide 1: Portada (Fondo Blanco)
-            const p1 = doc.addPage([W, H]);
-            p1.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(1, 1, 1) });
-            p1.drawRectangle({ x: 0, y: 0, width: 14, height: H, color: rgb(0.23, 0.51, 0.96) });
+            const slideBlocks = mdText.split(/\n\s*---\s*\n|^\s*---\s*$/m).map(b => b.trim()).filter(b => b.length > 0);
+            const totalSlides = slideBlocks.length || 1;
 
-            p1.drawRectangle({ x: 40, y: H - 180, width: W - 80, height: 130, color: rgb(0.96, 0.97, 1), borderColor: rgb(0.23, 0.51, 0.96), borderWidth: 1.5 });
-            p1.drawText('PRESENTACION DE PROYECTO', { x: 65, y: H - 110, size: 28, font: fontBold, color: rgb(0.09, 0.14, 0.24) });
-            p1.drawText('Informe de Resultados, Objetivos Estrategicos y Hoja de Ruta 2026', { x: 65, y: H - 145, size: 13, font: fontReg, color: rgb(0.23, 0.51, 0.96) });
-
-            p1.drawRectangle({ x: 40, y: 50, width: W - 80, height: 120, color: rgb(0.98, 0.98, 0.99), borderColor: rgb(0.88, 0.88, 0.92), borderWidth: 1 });
-            p1.drawText('AUTOR: Marlon Falcon Hernandez', { x: 65, y: 125, size: 12, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
-            p1.drawText('SITIO WEB: www.marlonfalcon.com', { x: 65, y: 100, size: 11, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
-            p1.drawText('FECHA: 06 de Septiembre de 2026', { x: 65, y: 75, size: 10, font: fontReg, color: rgb(0.4, 0.45, 0.55) });
-
-            // Slide 2: Solo Titulo y Texto (Fondo Blanco)
-            const p2 = doc.addPage([W, H]);
-            p2.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(1, 1, 1) });
-            p2.drawRectangle({ x: 0, y: H - 60, width: W, height: 60, color: rgb(0.96, 0.97, 1) });
-            p2.drawText('SLIDE 2: CONTENIDO PRINCIPAL Y DETALLES', { x: 35, y: H - 38, size: 18, font: fontBold, color: rgb(0.09, 0.14, 0.24) });
-            p2.drawLine({ start: { x: 35, y: H - 60 }, end: { x: W - 35, y: H - 60 }, thickness: 2, color: rgb(0.23, 0.51, 0.96) });
-
-            p2.drawRectangle({ x: 40, y: 50, width: W - 80, height: H - 140, color: rgb(0.99, 0.99, 1), borderColor: rgb(0.88, 0.88, 0.92), borderWidth: 1 });
-            
-            p2.drawText('TITULO DE LA SECCION / TEMA PRINCIPAL', { x: 65, y: H - 120, size: 16, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
-            
-            const bodyLines = [
-                'Este apartado esta disenado especificamente para presentar un texto explicativo claro y directo.',
-                'Puedes hacer doble clic en este texto para modificarlo, personalizar las frases o redactar tu propuesta.',
-                '',
-                'PUNTOS DESTACADOS DEL PROYECTO:',
-                '  * Primer objetivo: Definir el alcance y los requerimientos funcionales.',
-                '  * Segundo objetivo: Implementar una solucion eficiente, modular y sin dependencias externas.',
-                '  * Tercer objetivo: Garantizar la maxima calidad y facilidad de uso para los usuarios.',
-                '',
-                'Conclusion preliminar: Esta plantilla en fondo blanco ofrece la maxima legibilidad tanto para',
-                'presentaciones en pantalla como para impresion fisica en alta resolucion.'
-            ];
-
-            let textY = H - 155;
-            bodyLines.forEach(line => {
-                if (line.startsWith('PUNTOS') || line.startsWith('TITULO')) {
-                    p2.drawText(line, { x: 65, y: textY, size: 12, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
-                } else if (line.startsWith('  *')) {
-                    p2.drawText(line, { x: 65, y: textY, size: 11, font: fontReg, color: rgb(0.15, 0.2, 0.3) });
-                } else {
-                    p2.drawText(line, { x: 65, y: textY, size: 11, font: fontReg, color: rgb(0.3, 0.35, 0.45) });
+            const wrapText = (text, maxChars = 90) => {
+                if (!text || text.length <= maxChars) return [text];
+                const words = text.split(' ');
+                const lines = [];
+                let currentLine = '';
+                for (const word of words) {
+                    if ((currentLine + ' ' + word).trim().length <= maxChars) {
+                        currentLine = (currentLine + ' ' + word).trim();
+                    } else {
+                        if (currentLine) lines.push(currentLine);
+                        currentLine = word;
+                    }
                 }
-                textY -= 22;
+                if (currentLine) lines.push(currentLine);
+                return lines;
+            };
+
+            slideBlocks.forEach((block, index) => {
+                const page = doc.addPage([W, H]);
+                const slideNum = index + 1;
+
+                // Base Background
+                page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(1, 1, 1) });
+
+                // Left Accent Stripe
+                page.drawRectangle({ x: 0, y: 0, width: 12, height: H, color: rgb(0.23, 0.51, 0.96) });
+
+                // Footer Bar
+                page.drawRectangle({ x: 0, y: 0, width: W, height: 28, color: rgb(0.96, 0.97, 0.99) });
+                page.drawLine({ start: { x: 0, y: 28 }, end: { x: W, y: 28 }, thickness: 0.8, color: rgb(0.85, 0.88, 0.92) });
+
+                page.drawText('PDF Local Editor - Presentacion Markdown', {
+                    x: 35,
+                    y: 9,
+                    size: 8.5,
+                    font: fontReg,
+                    color: rgb(0.45, 0.5, 0.6)
+                });
+
+                page.drawText(`Diapositiva ${slideNum} de ${totalSlides}`, {
+                    x: W - 110,
+                    y: 9,
+                    size: 8.5,
+                    font: fontBold,
+                    color: rgb(0.23, 0.51, 0.96)
+                });
+
+                const rawLines = block.split('\n').map(l => l.trim());
+
+                let h1Title = '';
+                let h2Subtitle = '';
+                const bodyContent = [];
+                const metaFields = [];
+
+                rawLines.forEach(line => {
+                    if (!line) {
+                        bodyContent.push({ type: 'empty' });
+                        return;
+                    }
+
+                    if (line.startsWith('# ')) {
+                        h1Title = line.replace(/^#\s+/, '').trim();
+                    } else if (line.startsWith('## ')) {
+                        h2Subtitle = line.replace(/^##\s+/, '').trim();
+                    } else if (line.startsWith('### ')) {
+                        bodyContent.push({ type: 'h3', text: line.replace(/^###\s+/, '').trim() });
+                    } else if (/^(AUTOR|FECHA|SITIO WEB|PROYECTO|VERSION|EMAIL|CONTACTO):/i.test(line)) {
+                        metaFields.push(line);
+                    } else if (line.startsWith('- ') || line.startsWith('* ')) {
+                        bodyContent.push({ type: 'bullet', text: line.replace(/^[-*]\s+/, '').trim() });
+                    } else if (/^\d+\.\s+/.test(line)) {
+                        bodyContent.push({ type: 'numbered', text: line.trim() });
+                    } else if (line.startsWith('> ')) {
+                        bodyContent.push({ type: 'quote', text: line.replace(/^>\s+/, '').trim() });
+                    } else {
+                        bodyContent.push({ type: 'p', text: line });
+                    }
+                });
+
+                // Render Header if present
+                let currY = H - 55;
+
+                if (h1Title) {
+                    const headerH = h2Subtitle ? 65 : 50;
+                    page.drawRectangle({ x: 35, y: H - 25 - headerH, width: W - 70, height: headerH, color: rgb(0.96, 0.97, 1), borderColor: rgb(0.85, 0.9, 0.98), borderWidth: 1 });
+                    page.drawText(h1Title, { x: 55, y: H - 52, size: 20, font: fontBold, color: rgb(0.09, 0.14, 0.24) });
+                    if (h2Subtitle) {
+                        page.drawText(h2Subtitle, { x: 55, y: H - 72, size: 11, font: fontReg, color: rgb(0.23, 0.51, 0.96) });
+                    }
+                    currY = H - 40 - headerH;
+                } else if (h2Subtitle) {
+                    page.drawText(h2Subtitle, { x: 35, y: H - 45, size: 16, font: fontBold, color: rgb(0.09, 0.14, 0.24) });
+                    currY = H - 70;
+                }
+
+                // Render Metadata Box if present
+                if (metaFields.length > 0) {
+                    const metaH = metaFields.length * 22 + 16;
+                    page.drawRectangle({
+                        x: 35,
+                        y: currY - metaH,
+                        width: W - 70,
+                        height: metaH,
+                        color: rgb(0.98, 0.99, 1),
+                        borderColor: rgb(0.23, 0.51, 0.96),
+                        borderWidth: 1.2
+                    });
+
+                    let metaY = currY - 22;
+                    metaFields.forEach(mf => {
+                        const idx = mf.indexOf(':');
+                        const key = (idx !== -1 ? mf.substring(0, idx) : mf).trim() + ':';
+                        const val = (idx !== -1 ? mf.substring(idx + 1) : '').trim();
+                        page.drawText(key, { x: 55, y: metaY, size: 11, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+                        page.drawText(val, { x: 55 + key.length * 7 + 10, y: metaY, size: 10.5, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+                        metaY -= 22;
+                    });
+
+                    currY -= (metaH + 20);
+                }
+
+                // Render Body Content
+                let y = currY;
+
+                bodyContent.forEach(item => {
+                    if (y < 50) return;
+
+                    if (item.type === 'empty') {
+                        y -= 10;
+                    } else if (item.type === 'h3') {
+                        y -= 6;
+                        page.drawText(item.text, { x: 35, y: y, size: 13, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+                        y -= 22;
+                    } else if (item.type === 'bullet') {
+                        const wrapped = wrapText(item.text, 88);
+                        wrapped.forEach((wLine, idx) => {
+                            if (idx === 0) {
+                                page.drawText('*', { x: 45, y: y, size: 14, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+                                page.drawText(wLine, { x: 60, y: y, size: 11, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                            } else {
+                                page.drawText(wLine, { x: 60, y: y, size: 11, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                            }
+                            y -= 18;
+                        });
+                    } else if (item.type === 'numbered') {
+                        const wrapped = wrapText(item.text, 88);
+                        wrapped.forEach(wLine => {
+                            page.drawText(wLine, { x: 45, y: y, size: 11, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                            y -= 18;
+                        });
+                    } else if (item.type === 'quote') {
+                        const wrapped = wrapText(item.text, 82);
+                        const qH = wrapped.length * 18 + 12;
+                        page.drawRectangle({
+                            x: 35,
+                            y: y - qH + 12,
+                            width: W - 70,
+                            height: qH,
+                            color: rgb(0.96, 0.97, 0.99)
+                        });
+                        page.drawRectangle({
+                            x: 35,
+                            y: y - qH + 12,
+                            width: 4,
+                            height: qH,
+                            color: rgb(0.23, 0.51, 0.96)
+                        });
+
+                        wrapped.forEach(qLine => {
+                            page.drawText(qLine, { x: 50, y: y, size: 10.5, font: fontOblique, color: rgb(0.15, 0.2, 0.3) });
+                            y -= 18;
+                        });
+                        y -= 8;
+                    } else if (item.type === 'p') {
+                        const wrapped = wrapText(item.text, 92);
+                        wrapped.forEach(wLine => {
+                            page.drawText(wLine, { x: 35, y: y, size: 11, font: fontReg, color: rgb(0.25, 0.3, 0.4) });
+                            y -= 18;
+                        });
+                    }
+                });
             });
-
-            // Slide 3: Conclusión y Contacto (Fondo Blanco)
-            const p3 = doc.addPage([W, H]);
-            p3.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(1, 1, 1) });
-            p3.drawRectangle({ x: 0, y: H - 60, width: W, height: 60, color: rgb(0.96, 0.97, 1) });
-            p3.drawText('SLIDE 3: CONCLUSIONES Y PROXIMOS PASOS', { x: 35, y: H - 38, size: 18, font: fontBold, color: rgb(0.09, 0.14, 0.24) });
-            p3.drawLine({ start: { x: 35, y: H - 60 }, end: { x: W - 35, y: H - 60 }, thickness: 2, color: rgb(0.05, 0.65, 0.41) });
-
-            p3.drawRectangle({ x: 40, y: H - 320, width: W - 80, height: 230, borderWidth: 2, borderColor: rgb(0.05, 0.65, 0.41), color: rgb(0.96, 1, 0.98) });
-            p3.drawText('RESUMEN Y CONCLUSIONES CLAVE:', { x: 65, y: H - 125, size: 14, font: fontBold, color: rgb(0.05, 0.65, 0.41) });
-
-            const conclusions = [
-                '1. La ejecucion 100% local garantiza la privacidad absoluta de los archivos PDF.',
-                '2. El rendimiento de renderizado y edicion se mantiene fluido sin dependencia de la nube.',
-                '3. La plataforma integra todas las herramientas necesarias para firma, edicion y diseno.'
-            ];
-            let cy = H - 165;
-            conclusions.forEach(cText => {
-                p3.drawText(cText, { x: 65, y: cy, size: 11, font: fontReg, color: rgb(0.2, 0.25, 0.3) });
-                cy -= 30;
-            });
-
-            // Thank you Banner
-            p3.drawRectangle({ x: 40, y: 50, width: W - 80, height: 140, color: rgb(0.95, 0.97, 1), borderColor: rgb(0.23, 0.51, 0.96), borderWidth: 2 });
-            p3.drawText('MUCHAS GRACIAS POR SU ATENCION', { x: W / 2 - 190, y: 135, size: 20, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
-            p3.drawText('Contacto: contacto@marlonfalcon.com  |  Web: www.marlonfalcon.com', { x: W / 2 - 200, y: 95, size: 11, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
 
             const bytes = await doc.save();
-            await this.loadPDFBytes(bytes, 'presentacion_3_paginas.pdf');
-            showToast('Plantilla de Presentación (3 Páginas) cargada correctamente.', 'success');
+            await this.loadPDFBytes(bytes, 'presentacion_markdown.pdf');
+            showToast(`Presentación PDF de ${totalSlides} diapositiva(s) generada con éxito desde Markdown.`, 'success');
         } catch (err) {
-            console.error('Error al generar presentación:', err);
-            showToast('Error al generar plantilla de presentación.', 'danger');
+            console.error('Error al generar presentación desde Markdown:', err);
+            showToast('Error al generar la presentación en PDF.', 'danger');
         }
     }
 
