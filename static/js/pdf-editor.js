@@ -1695,6 +1695,27 @@ FORMA_PAGO: 50% al inicio de los trabajos y 50% a la entrega del proyecto.
 - OCTAVA - CAUSAS DE RESCISION Y EXTINCION: El incumplimiento grave de cualquiera de las cláusulas otorgará a la parte afectada el derecho a rescindir unilateralmente el contrato previa notificación por escrito.
 - NOVENA - MODIFICACIONES AL ACUERDO: Cualquier modificación, adenda o ampliación del alcance de este contrato requerirá acuerdo expreso firmado por ambas partes.
 - DECIMA - LEY APLICABLE Y JURISDICCION: El presente contrato se rige por la legislación española. Ambas partes se someten expresamente a los Juzgados y Tribunales del lugar de celebración del contrato.`;
+        } else if (type === 'guitar-chords' || type === 'chords') {
+            return `# 12 ACORDES DE GUITARRA PARA PRINCIPIANTES
+ESTILO: 1
+TITULO: 12 ACCORDS DE GUITARE POUR BIEN DEBUTER
+SUBTITULO: Guía visual de posiciones para guitarra acústica y eléctrica
+AUTOR: Marlon Falcón
+
+## ACORDES
+| Acorde | Cuerdas (6ª a 1ª) | Dedos |
+| Em | O 2 2 O O O | - 2 3 - - - |
+| E | O 2 2 1 O O | - 2 3 1 - - |
+| Am | X O 2 2 1 O | - - 2 3 1 - |
+| C | X 3 2 O 1 O | - 3 2 - 1 - |
+| A | X O 2 2 2 O | - - 2 3 4 - |
+| G | 3 2 O O O 3 | 3 2 - - - 4 |
+| D | X X O 2 3 2 | - - - 1 3 2 |
+| Dm | X X O 2 3 1 | - - - 2 3 1 |
+| E7 | O 2 O 1 O O | - 2 - 1 - - |
+| D7 | X X O 2 1 3 | - - - 2 1 3 |
+| A7 | X O 2 O 2 O | - - 2 - 3 - |
+| C7 | X 3 2 3 1 O | - 3 2 4 1 - |`;
         } else {
             return this.getDefaultMarkdownSample();
         }
@@ -5640,6 +5661,277 @@ FORMA_PAGO: 50% al inicio de los trabajos y 50% a la entrega del proyecto.
         }
     }
 
+    async createGuitarChordsTemplate(mdText, isSilent = false) {
+        showToast('Generando Guía de Acordes de Guitarra...', 'info', isSilent);
+        try {
+            const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+            const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+
+            const W = 595.28; // A4 Portrait
+            const H = 841.89;
+
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
+            const titulo = this.getMdVal(mdText, 'TITULO|HEADER', '12 ACORDES DE GUITARRA PARA PRINCIPIANTES');
+            const subtitulo = this.getMdVal(mdText, 'SUBTITULO', 'Guía visual de posiciones para guitarra acústica y eléctrica');
+            const autor = this.getMdVal(mdText, 'AUTOR', 'Marlon Falcón');
+
+            // Parse Chords Table
+            const chords = [];
+            if (mdText) {
+                const lines = mdText.split('\n');
+                lines.forEach(line => {
+                    if (line.includes('|') && !line.includes('---') && !line.toLowerCase().includes('cuerdas') && !line.toLowerCase().includes('posición')) {
+                        const parts = line.split('|').map(p => p.trim()).filter(p => p.length > 0);
+                        if (parts.length >= 1) {
+                            const name = parts[0] || 'Acorde';
+                            const stringsRaw = parts[1] || 'O O O O O O';
+                            const fingersRaw = parts[2] || '- - - - - -';
+                            chords.push({ name, stringsRaw, fingersRaw });
+                        }
+                    }
+                });
+            }
+
+            // Fallback default 12 chords if empty
+            if (chords.length === 0) {
+                chords.push(
+                    { name: 'Em', stringsRaw: 'O 2 2 O O O', fingersRaw: '- 2 3 - - -' },
+                    { name: 'E', stringsRaw: 'O 2 2 1 O O', fingersRaw: '- 2 3 1 - -' },
+                    { name: 'Am', stringsRaw: 'X O 2 2 1 O', fingersRaw: '- - 2 3 1 -' },
+                    { name: 'C', stringsRaw: 'X 3 2 O 1 O', fingersRaw: '- 3 2 - 1 -' },
+                    { name: 'A', stringsRaw: 'X O 2 2 2 O', fingersRaw: '- - 2 3 4 -' },
+                    { name: 'G', stringsRaw: '3 2 O O O 3', fingersRaw: '3 2 - - - 4' },
+                    { name: 'D', stringsRaw: 'X X O 2 3 2', fingersRaw: '- - - 1 3 2' },
+                    { name: 'Dm', stringsRaw: 'X X O 2 3 1', fingersRaw: '- - - 2 3 1' },
+                    { name: 'E7', stringsRaw: 'O 2 O 1 O O', fingersRaw: '- 2 - 1 - -' },
+                    { name: 'D7', stringsRaw: 'X X O 2 1 3', fingersRaw: '- - - 2 1 3' },
+                    { name: 'A7', stringsRaw: 'X O 2 O 2 O', fingersRaw: '- - 2 - 3 -' },
+                    { name: 'C7', stringsRaw: 'X 3 2 3 1 O', fingersRaw: '- 3 2 4 1 -' }
+                );
+            }
+
+            const parse6Tokens = (str) => {
+                if (!str) return Array(6).fill('-');
+                let tokens = str.trim().split(/[\s,]+/);
+                if (tokens.length < 6 && str.trim().replace(/[\s,]+/g, '').length >= 6) {
+                    tokens = str.trim().replace(/[\s,]+/g, '').split('').slice(0, 6);
+                }
+                while (tokens.length < 6) tokens.push('-');
+                return tokens.slice(0, 6);
+            };
+
+            const perPage = 12;
+            const totalPages = Math.ceil(chords.length / perPage) || 1;
+
+            for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+                const page = doc.addPage([W, H]);
+
+                // Header Bar
+                page.drawRectangle({
+                    x: 0,
+                    y: H - 80,
+                    width: W,
+                    height: 80,
+                    color: theme.headerBg
+                });
+
+                page.drawText(titulo, {
+                    x: 30,
+                    y: H - 45,
+                    size: 16,
+                    font: fontBold,
+                    color: rgb(1, 1, 1)
+                });
+
+                page.drawText(`${subtitulo}  |  AUTOR: ${autor}`, {
+                    x: 30,
+                    y: H - 65,
+                    size: 9.5,
+                    font: fontReg,
+                    color: rgb(0.85, 0.9, 0.98)
+                });
+
+                // Page Chords
+                const pageChords = chords.slice(pageIdx * perPage, (pageIdx + 1) * perPage);
+
+                // Grid 4 columns x 3 rows
+                const cols = 4;
+                const rows = 3;
+                const marginX = 25;
+                const marginYTop = 100;
+                const marginYBottom = 40;
+                const gridW = W - marginX * 2; // 545.28 pt
+                const gridH = H - marginYTop - marginYBottom; // 701.89 pt
+                const cellW = gridW / cols; // ~136.3 pt
+                const cellH = gridH / rows; // ~233.9 pt
+
+                pageChords.forEach((chord, i) => {
+                    const c = i % cols;
+                    const r = Math.floor(i / cols);
+
+                    const cellX = marginX + c * cellW;
+                    const cellY = H - marginYTop - (r + 1) * cellH;
+
+                    // Subtle Card Border
+                    page.drawRectangle({
+                        x: cellX + 4,
+                        y: cellY + 4,
+                        width: cellW - 8,
+                        height: cellH - 8,
+                        color: theme.bg,
+                        borderColor: rgb(0.88, 0.9, 0.94),
+                        borderWidth: 0.8
+                    });
+
+                    const cellCenterX = cellX + cellW / 2;
+                    const cellTopY = cellY + cellH - 12;
+
+                    // Chord Name
+                    const chordName = chord.name || 'Acorde';
+                    const nameLen = chordName.length;
+                    const nameFontSize = nameLen > 3 ? 18 : 22;
+                    page.drawText(chordName, {
+                        x: cellCenterX - (nameLen * nameFontSize * 0.28),
+                        y: cellTopY - 20,
+                        size: nameFontSize,
+                        font: fontBold,
+                        color: theme.textDark
+                    });
+
+                    // Parse Strings & Fingers
+                    const stringTokens = parse6Tokens(chord.stringsRaw);
+                    const fingerTokens = parse6Tokens(chord.fingersRaw);
+
+                    // Fretboard Grid Setup
+                    const numStrings = 6;
+                    const stringGap = 15; // 5 gaps * 15 = 75 pt
+                    const fretboardW = (numStrings - 1) * stringGap; // 75 pt
+                    const startStrX = cellCenterX - fretboardW / 2;
+
+                    const numFrets = 4;
+                    const fretGap = 24; // 4 frets * 24 = 96 pt
+                    const fretboardH = numFrets * fretGap; // 96 pt
+                    const nutY = cellTopY - 60; // top nut line Y
+
+                    // Top Indicators Row (O / X above nut)
+                    stringTokens.forEach((stTok, sIdx) => {
+                        const sX = startStrX + sIdx * stringGap;
+                        const tokUpper = stTok.toUpperCase();
+
+                        if (tokUpper === 'X') {
+                            page.drawText('X', {
+                                x: sX - 3.5,
+                                y: nutY + 10,
+                                size: 10,
+                                font: fontBold,
+                                color: rgb(0.8, 0.2, 0.2)
+                            });
+                        } else if (tokUpper === 'O' || tokUpper === '0') {
+                            page.drawText('O', {
+                                x: sX - 4,
+                                y: nutY + 10,
+                                size: 10,
+                                font: fontBold,
+                                color: theme.primary
+                            });
+                        }
+                    });
+
+                    // Draw Nut (Top thick line)
+                    page.drawLine({
+                        start: { x: startStrX, y: nutY },
+                        end: { x: startStrX + fretboardW, y: nutY },
+                        thickness: 3.5,
+                        color: theme.textDark
+                    });
+
+                    // Draw Horizontal Fret Lines (Frets 1 to 4)
+                    for (let f = 1; f <= numFrets; f++) {
+                        const fY = nutY - f * fretGap;
+                        page.drawLine({
+                            start: { x: startStrX, y: fY },
+                            end: { x: startStrX + fretboardW, y: fY },
+                            thickness: 1,
+                            color: rgb(0.55, 0.6, 0.7)
+                        });
+                    }
+
+                    // Draw Vertical String Lines (6th to 1st)
+                    for (let s = 0; s < numStrings; s++) {
+                        const sX = startStrX + s * stringGap;
+                        const strThick = 1.6 - (s * 0.2);
+                        page.drawLine({
+                            start: { x: sX, y: nutY },
+                            end: { x: sX, y: nutY - fretboardH },
+                            thickness: Math.max(0.6, strThick),
+                            color: rgb(0.25, 0.3, 0.4)
+                        });
+                    }
+
+                    // Draw Finger Dots on Frets
+                    stringTokens.forEach((stTok, sIdx) => {
+                        const sX = startStrX + sIdx * stringGap;
+                        const tokUpper = stTok.toUpperCase();
+                        const fretNum = parseInt(tokUpper);
+
+                        if (!isNaN(fretNum) && fretNum >= 1 && fretNum <= numFrets) {
+                            const dotX = sX;
+                            const dotY = nutY - (fretNum - 0.5) * fretGap;
+
+                            // Black / Theme filled circle
+                            page.drawCircle({
+                                x: dotX,
+                                y: dotY,
+                                size: 7.5,
+                                color: theme.primary
+                            });
+
+                            // Finger Number inside Dot
+                            const fingerTok = fingerTokens[sIdx];
+                            if (fingerTok && fingerTok !== '-' && fingerTok !== 'O' && fingerTok !== 'X') {
+                                page.drawText(fingerTok, {
+                                    x: dotX - 2.5,
+                                    y: dotY - 3,
+                                    size: 8,
+                                    font: fontBold,
+                                    color: rgb(1, 1, 1)
+                                });
+                            }
+                        }
+                    });
+                });
+
+                // Footer Bar
+                page.drawLine({ start: { x: 30, y: 30 }, end: { x: W - 30, y: 30 }, thickness: 0.8, color: rgb(0.85, 0.88, 0.92) });
+                page.drawText(`Guía de Acordes de Guitarra  |  Página ${pageIdx + 1} de ${totalPages}`, {
+                    x: 30,
+                    y: 16,
+                    size: 8,
+                    font: fontReg,
+                    color: rgb(0.5, 0.55, 0.65)
+                });
+                page.drawText('www.marlonfalcon.com', {
+                    x: W - 130,
+                    y: 16,
+                    size: 8,
+                    font: fontBold,
+                    color: theme.primary
+                });
+            }
+
+            const bytes = await doc.save();
+            await this.loadPDFBytes(bytes, 'acordes_guitarra.pdf');
+            showToast('Guía de Acordes de Guitarra generada correctamente.', 'success', isSilent);
+        } catch (err) {
+            console.error('Error al generar acordes de guitarra:', err);
+            showToast('Error al generar la Guía de Acordes de Guitarra.', 'danger');
+        }
+    }
+
     initMarkdownModal() {
         const modal = document.getElementById('markdown-modal');
         const openHeaderBtn = document.getElementById('btn-open-markdown-modal');
@@ -6098,6 +6390,12 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
             return;
         } else if (templateType === 'signatures-list' || templateType === 'signatures') {
             await this.createSignaturesListTemplate(mdText, isSilent);
+            return;
+        } else if (templateType === 'service-contract' || templateType === 'contract') {
+            await this.createServiceContractTemplate(mdText, isSilent);
+            return;
+        } else if (templateType === 'guitar-chords' || templateType === 'chords') {
+            await this.createGuitarChordsTemplate(mdText, isSilent);
             return;
         }
 
