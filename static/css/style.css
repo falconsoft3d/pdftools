@@ -846,6 +846,16 @@ body {
   background-color: #059669;
 }
 
+.btn-warning {
+  background-color: #f97316;
+  color: #ffffff;
+  border-color: #ea580c;
+}
+
+.btn-warning:hover {
+  background-color: #ea580c;
+}
+
 .btn-danger {
   background-color: var(--accent-danger);
   color: #ffffff;
