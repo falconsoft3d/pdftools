@@ -3765,7 +3765,7 @@ FECHA: 06 / 09 / 2026
 
                         wrapped.forEach((wLine, idx) => {
                             if (idx === 0) {
-                                page.drawText('•', { x: 45, y: currY, size: 10, font: fontBold, color: theme.primary });
+                                page.drawCircle({ x: 48, y: currY + 3, size: 2, color: theme.primary });
                                 page.drawText(wLine, { x: 58, y: currY, size: 10, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
                             } else {
                                 page.drawText(wLine, { x: 58, y: currY, size: 10, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
@@ -4282,7 +4282,7 @@ FECHA: 06 / 09 / 2026
 
                         wrapped.forEach((wLine, idx) => {
                             if (idx === 0) {
-                                page.drawText('•', { x: 45, y: currY, size: 10, font: fontBold, color: theme.primary });
+                                page.drawCircle({ x: 48, y: currY + 3, size: 2, color: theme.primary });
                                 page.drawText(wLine, { x: 58, y: currY, size: 9.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
                             } else {
                                 page.drawText(wLine, { x: 58, y: currY, size: 9.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
@@ -4905,7 +4905,7 @@ FECHA: 06 / 09 / 2026
                         borderWidth: 1
                     });
 
-                    page.drawText(isStart ? '● INICIO' : '■ FIN', {
+                    page.drawText(isStart ? 'INICIO' : 'FIN', {
                         x: boxX + 12,
                         y: boxY + 8,
                         size: 9,
@@ -4914,7 +4914,7 @@ FECHA: 06 / 09 / 2026
                     });
 
                     page.drawText(step.text, {
-                        x: boxX + 60,
+                        x: boxX + 55,
                         y: boxY + 8,
                         size: 9.5,
                         font: fontBold,
@@ -4940,7 +4940,7 @@ FECHA: 06 / 09 / 2026
                         borderWidth: 2
                     });
 
-                    page.drawText('◆ DECISION', {
+                    page.drawText('DECISION', {
                         x: boxX + 10,
                         y: boxY + 11,
                         size: 8.5,
@@ -4949,7 +4949,7 @@ FECHA: 06 / 09 / 2026
                     });
 
                     page.drawText(step.text, {
-                        x: boxX + 80,
+                        x: boxX + 65,
                         y: boxY + 11,
                         size: 9.5,
                         font: fontBold,
@@ -4987,7 +4987,7 @@ FECHA: 06 / 09 / 2026
                         step.subBranches.forEach((sb, sbIdx) => {
                             const sbX = (numBranches === 2) ? (startBranchX + sbIdx * (subW + branchGap)) : (centerX - subW / 2);
                             const sbY = currY - subH;
-                            const isYes = sb.branchLabel === 'SÍ';
+                            const isYes = sb.branchLabel === 'SI' || sb.branchLabel === 'SÍ';
                             const badgeColor = isYes ? rgb(0.05, 0.65, 0.41) : rgb(0.86, 0.15, 0.15);
 
                             // Connector vertical line
@@ -5009,7 +5009,7 @@ FECHA: 06 / 09 / 2026
                                 borderWidth: 1.5
                             });
 
-                            // Branch Label Badge (SÍ / NO)
+                            // Branch Label Badge (SI / NO)
                             if (sb.branchLabel) {
                                 page.drawRectangle({
                                     x: sbX + 5,
@@ -5018,8 +5018,8 @@ FECHA: 06 / 09 / 2026
                                     height: 18,
                                     color: badgeColor
                                 });
-                                page.drawText(sb.branchLabel, {
-                                    x: sbX + (isYes ? 8 : 7),
+                                page.drawText(isYes ? 'SI' : 'NO', {
+                                    x: sbX + 8,
                                     y: sbY + 11,
                                     size: 8,
                                     font: fontBold,
@@ -5099,7 +5099,7 @@ FECHA: 06 / 09 / 2026
                 borderWidth: 0.8
             });
 
-            page.drawText('SIMBOLOGIA:  ● Inicio/Fin (Verde/Rojo)  |  ◆ Decisión (Ámbar)  |  ■ Proceso (Azul)  |  ■ Entrada/Salida (Cian)', {
+            page.drawText('SIMBOLOGIA:  [INICIO/FIN] Verde/Rojo  |  [DECISION] Ambar  |  [PROCESO] Azul  |  [ENTRADA/SALIDA] Cian', {
                 x: 45,
                 y: 27,
                 size: 8,
