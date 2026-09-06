@@ -24,7 +24,8 @@
         }
 
         .stats-container {
-            max-width: 1100px;
+            max-width: 1500px;
+            width: 95%;
             margin: 0 auto;
             padding: 2rem 1.5rem;
             display: flex;
@@ -226,7 +227,7 @@
                 <i class="fas fa-globe" style="color: var(--accent-primary);"></i>
                 Mapa Mundial de Visitas por Países
             </div>
-            <div id="world-map-container" style="width: 100%; min-height: 380px; border-radius: 8px; overflow: hidden;"></div>
+            <div id="world-map-container" style="width: 100%; min-height: 480px; border-radius: 8px; overflow: hidden;"></div>
         </div>
 
         <!-- Country Breakdown -->
@@ -273,6 +274,7 @@
                         <tr>
                             <th>Fecha y Hora</th>
                             <th>País</th>
+                            <th>Navegador / Sistema</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -281,11 +283,14 @@
                         <tr>
                             <td>{{ visit.created_at }}</td>
                             <td>{{ visit.flag }} {{ visit.country }}</td>
+                            <td style="color: var(--text-muted); font-size: 0.78rem; max-width: 300px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                {{ visit.user_agent }}
+                            </td>
                         </tr>
                         {% endfor %}
                         {% else %}
                         <tr>
-                            <td colspan="2" style="text-align: center; color: var(--text-muted);">No hay registros recientes.</td>
+                            <td colspan="3" style="text-align: center; color: var(--text-muted);">No hay registros recientes.</td>
                         </tr>
                         {% endif %}
                     </tbody>
