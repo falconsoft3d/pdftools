@@ -1649,8 +1649,8 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
         }
     }
 
-    async createInvoiceTemplate(mdText) {
-        showToast('Generando plantilla de Factura...', 'info');
+    async createInvoiceTemplate(mdText, isSilent = false) {
+        showToast('Generando plantilla de Factura...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -1814,15 +1814,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'factura.pdf');
-            showToast('Plantilla de Factura actualizada desde Markdown.', 'success');
+            showToast('Plantilla de Factura actualizada desde Markdown.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar plantilla de factura:', err);
             showToast('Error al generar plantilla de factura.', 'danger');
         }
     }
 
-    async createDiplomaTemplate(mdText) {
-        showToast('Generando plantilla de Diploma...', 'info');
+    async createDiplomaTemplate(mdText, isSilent = false) {
+        showToast('Generando plantilla de Diploma...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -1940,15 +1940,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'diploma.pdf');
-            showToast('Plantilla de Diploma actualizada desde Markdown.', 'success');
+            showToast('Plantilla de Diploma actualizada desde Markdown.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar plantilla de diploma:', err);
             showToast('Error al generar plantilla de diploma.', 'danger');
         }
     }
 
-    async createSaleSignTemplate(mdText) {
-        showToast('Generando cartel SE VENDE...', 'info');
+    async createSaleSignTemplate(mdText, isSilent = false) {
+        showToast('Generando cartel SE VENDE...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -2102,15 +2102,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'cartel_se_vende.pdf');
-            showToast('Cartel SE VENDE actualizado desde Markdown.', 'success');
+            showToast('Cartel SE VENDE actualizado desde Markdown.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar cartel se vende:', err);
             showToast('Error al generar el cartel SE VENDE.', 'danger');
         }
     }
 
-    async createBusinessCardsTemplate(mdText) {
-        showToast('Generando plantilla de Tarjetas de Presentación (8 por página)...', 'info');
+    async createBusinessCardsTemplate(mdText, isSilent = false) {
+        showToast('Generando plantilla de Tarjetas de Presentación (8 por página)...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -2233,15 +2233,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'tarjetas_presentacion.pdf');
-            showToast('Plantilla de Tarjetas de Presentación (8 por página) actualizada desde Markdown.', 'success');
+            showToast('Plantilla de Tarjetas de Presentación (8 por página) actualizada desde Markdown.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar tarjetas de presentación:', err);
             showToast('Error al generar la plantilla de tarjetas de presentación.', 'danger');
         }
     }
 
-    async createBookLabelsTemplate(mdText) {
-        showToast('Generando plantilla de Etiquetas para Libros...', 'info');
+    async createBookLabelsTemplate(mdText, isSilent = false) {
+        showToast('Generando plantilla de Etiquetas para Libros...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -2345,15 +2345,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'etiquetas_libros.pdf');
-            showToast('Plantilla de Etiquetas para Libros (6 por página) actualizada desde Markdown.', 'success');
+            showToast('Plantilla de Etiquetas para Libros (6 por página) actualizada desde Markdown.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar etiquetas para libros:', err);
             showToast('Error al generar plantilla de etiquetas para libros.', 'danger');
         }
     }
 
-    async createQrPosterTemplate(mdText) {
-        showToast('Generando Cartel con Texto y Código QR...', 'info');
+    async createQrPosterTemplate(mdText, isSilent = false) {
+        showToast('Generando Cartel con Texto y Código QR...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -2484,15 +2484,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'cartel_qr.pdf');
-            showToast('Cartel con QR actualizado desde Markdown.', 'success');
+            showToast('Cartel con QR actualizado desde Markdown.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar cartel con QR:', err);
             showToast('Error al generar el cartel con QR.', 'danger');
         }
     }
 
-    async createMobileWireframeTemplate(mdText) {
-        showToast('Generando Prototipo de App Móvil...', 'info');
+    async createMobileWireframeTemplate(mdText, isSilent = false) {
+        showToast('Generando Prototipo de App Móvil...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -2596,15 +2596,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'prototipo_mobile.pdf');
-            showToast('Prototipo de App Móvil actualizado desde Markdown.', 'success');
+            showToast('Prototipo de App Móvil actualizado desde Markdown.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar prototipo mobile:', err);
             showToast('Error al generar prototipo mobile.', 'danger');
         }
     }
 
-    async createDesktopWireframeTemplate(mdText) {
-        showToast('Generando Prototipo de App Desktop / Web...', 'info');
+    async createDesktopWireframeTemplate(mdText, isSilent = false) {
+        showToast('Generando Prototipo de App Desktop / Web...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -2753,15 +2753,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'prototipo_desktop.pdf');
-            showToast('Prototipo App Desktop actualizado desde Markdown.', 'success');
+            showToast('Prototipo App Desktop actualizado desde Markdown.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar prototipo desktop:', err);
             showToast('Error al generar prototipo desktop.', 'danger');
         }
     }
 
-    async createJobOfferTemplate(mdText) {
-        showToast('Generando plantilla de Oferta de Empleo...', 'info');
+    async createJobOfferTemplate(mdText, isSilent = false) {
+        showToast('Generando plantilla de Oferta de Empleo...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -2911,15 +2911,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'oferta_empleo.pdf');
-            showToast('Plantilla de Oferta de Empleo actualizada desde Markdown.', 'success');
+            showToast('Plantilla de Oferta de Empleo actualizada desde Markdown.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar oferta de empleo:', err);
             showToast('Error al generar plantilla de oferta de empleo.', 'danger');
         }
     }
 
-    async createMoneyReceiptTemplate(mdText) {
-        showToast('Generando Comprobante de Recepción de Dinero...', 'info');
+    async createMoneyReceiptTemplate(mdText, isSilent = false) {
+        showToast('Generando Comprobante de Recepción de Dinero...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -3043,15 +3043,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'comprobante_recibo_dinero.pdf');
-            showToast('Comprobante de Dinero actualizado desde Markdown.', 'success');
+            showToast('Comprobante de Dinero actualizado desde Markdown.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar comprobante de dinero:', err);
             showToast('Error al generar el comprobante de dinero.', 'danger');
         }
     }
 
-    async createWhatsAppStatusTemplate(mdText) {
-        showToast('Generando Estado de WhatsApp / Story vertical...', 'info');
+    async createWhatsAppStatusTemplate(mdText, isSilent = false) {
+        showToast('Generando Estado de WhatsApp / Story vertical...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -3393,15 +3393,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'estado_whatsapp.pdf');
-            showToast(`Estado de WhatsApp generado con éxito (Estilo ${estilo} de 10).`, 'success');
+            showToast(`Estado de WhatsApp generado con éxito (Estilo ${estilo} de 10).`, 'success', isSilent);
         } catch (err) {
             console.error('Error al generar estado de whatsapp:', err);
             showToast('Error al generar el estado de WhatsApp.', 'danger');
         }
     }
 
-    async createTodoListTemplate(mdText) {
-        showToast('Generando Lista de Tareas / TODO List...', 'info');
+    async createTodoListTemplate(mdText, isSilent = false) {
+        showToast('Generando Lista de Tareas / TODO List...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -3530,15 +3530,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'lista_tareas_todo.pdf');
-            showToast('Lista de Tareas / TODO List lista para imprimir o completar.', 'success');
+            showToast('Lista de Tareas / TODO List lista para imprimir o completar.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar lista de tareas:', err);
             showToast('Error al generar la lista de tareas.', 'danger');
         }
     }
 
-    async createResumeCvTemplate(mdText) {
-        showToast('Generando Currículum Vitae (CV)...', 'info');
+    async createResumeCvTemplate(mdText, isSilent = false) {
+        showToast('Generando Currículum Vitae (CV)...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -3675,15 +3675,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'curriculum_vitae.pdf');
-            showToast('Currículum Vitae (CV) generado correctamente.', 'success');
+            showToast('Currículum Vitae (CV) generado correctamente.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar CV:', err);
             showToast('Error al generar el Currículum Vitae.', 'danger');
         }
     }
 
-    async createGanttChartTemplate(mdText) {
-        showToast('Generando Cronograma Gantt / Timeline...', 'info');
+    async createGanttChartTemplate(mdText, isSilent = false) {
+        showToast('Generando Cronograma Gantt / Timeline...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -3885,15 +3885,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'cronograma_gantt.pdf');
-            showToast('Cronograma Gantt / Timeline generado correctamente desde Markdown.', 'success');
+            showToast('Cronograma Gantt / Timeline generado correctamente desde Markdown.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar cronograma gantt:', err);
             showToast('Error al generar el Cronograma Gantt.', 'danger');
         }
     }
 
-    async createBudgetQuoteTemplate(mdText) {
-        showToast('Generando Presupuesto / Propuesta Comercial...', 'info');
+    async createBudgetQuoteTemplate(mdText, isSilent = false) {
+        showToast('Generando Presupuesto / Propuesta Comercial...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -4046,15 +4046,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'presupuesto_comercial.pdf');
-            showToast('Presupuesto / Propuesta Comercial generado correctamente.', 'success');
+            showToast('Presupuesto / Propuesta Comercial generado correctamente.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar presupuesto:', err);
             showToast('Error al generar la propuesta comercial.', 'danger');
         }
     }
 
-    async createMeetingSummaryTemplate(mdText) {
-        showToast('Generando Resumen de Reunión / Acta...', 'info');
+    async createMeetingSummaryTemplate(mdText, isSilent = false) {
+        showToast('Generando Resumen de Reunión / Acta...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -4185,15 +4185,15 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'resumen_reunion.pdf');
-            showToast('Resumen de Reunión / Acta generado correctamente.', 'success');
+            showToast('Resumen de Reunión / Acta generado correctamente.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar resumen de reunión:', err);
             showToast('Error al generar el resumen de reunión.', 'danger');
         }
     }
 
-    async createProjectGoalsTemplate(mdText) {
-        showToast('Generando Objetivos de Proyecto...', 'info');
+    async createProjectGoalsTemplate(mdText, isSilent = false) {
+        showToast('Generando Objetivos de Proyecto...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -4318,7 +4318,7 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'objetivos_proyecto.pdf');
-            showToast('Documento de Objetivos de Proyecto generado correctamente.', 'success');
+            showToast('Documento de Objetivos de Proyecto generado correctamente.', 'success', isSilent);
         } catch (err) {
             console.error('Error al generar objetivos de proyecto:', err);
             showToast('Error al generar el documento de objetivos.', 'danger');
@@ -4429,7 +4429,7 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
             if (modalSelect) modalSelect.value = selectedType;
             const newMd = this.getMarkdownSampleForType(selectedType);
             if (sideTextarea) sideTextarea.value = newMd;
-            handleUpdate();
+            handleUpdate(false);
         });
 
         const togglePanel = (show) => {
@@ -4471,26 +4471,26 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
                     this.currentMarkdownText = text;
                     localStorage.setItem('saved_presentation_md', text);
                     showToast(`Archivo "${file.name}" cargado en el panel Markdown.`, 'success');
-                    handleUpdate();
+                    handleUpdate(false);
                 };
                 reader.readAsText(file);
             }
         });
 
-        const handleUpdate = async () => {
+        const handleUpdate = async (isSilent = true) => {
             const mdText = sideTextarea?.value || '';
             if (!mdText.trim()) return;
             const selType = sideSelect ? sideSelect.value : (this.currentTemplateType || 'presentation');
-            await this.createPDFFromMarkdown(mdText, selType);
+            await this.createPDFFromMarkdown(mdText, selType, isSilent);
         };
 
-        updateBtn?.addEventListener('click', handleUpdate);
+        updateBtn?.addEventListener('click', () => handleUpdate(false));
 
         let debounceTimer = null;
         sideTextarea?.addEventListener('input', () => {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
-                handleUpdate();
+                handleUpdate(true);
             }, 300);
         });
 
@@ -4545,9 +4545,9 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
         }
     }
 
-    async createPDFFromMarkdown(mdText, templateType = 'presentation') {
+    async createPDFFromMarkdown(mdText, templateType = 'presentation', isSilent = false) {
         if (!mdText || !mdText.trim()) {
-            showToast('El contenido Markdown está vacío.', 'warning');
+            showToast('El contenido Markdown está vacío.', 'warning', isSilent);
             return;
         }
 
@@ -4566,64 +4566,64 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
         }
 
         if (templateType === 'invoice') {
-            await this.createInvoiceTemplate(mdText);
+            await this.createInvoiceTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'diploma') {
-            await this.createDiplomaTemplate(mdText);
+            await this.createDiplomaTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'sale') {
-            await this.createSaleSignTemplate(mdText);
+            await this.createSaleSignTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'business-cards') {
-            await this.createBusinessCardsTemplate(mdText);
+            await this.createBusinessCardsTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'book-labels') {
-            await this.createBookLabelsTemplate(mdText);
+            await this.createBookLabelsTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'qr-poster') {
-            await this.createQrPosterTemplate(mdText);
+            await this.createQrPosterTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'mobile-wireframe') {
-            await this.createMobileWireframeTemplate(mdText);
+            await this.createMobileWireframeTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'desktop-wireframe') {
-            await this.createDesktopWireframeTemplate(mdText);
+            await this.createDesktopWireframeTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'job-offer') {
-            await this.createJobOfferTemplate(mdText);
+            await this.createJobOfferTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'money-receipt') {
-            await this.createMoneyReceiptTemplate(mdText);
+            await this.createMoneyReceiptTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'whatsapp-status') {
-            await this.createWhatsAppStatusTemplate(mdText);
+            await this.createWhatsAppStatusTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'todo-list') {
-            await this.createTodoListTemplate(mdText);
+            await this.createTodoListTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'resume-cv') {
-            await this.createResumeCvTemplate(mdText);
+            await this.createResumeCvTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'gantt-chart' || templateType === 'gantt') {
-            await this.createGanttChartTemplate(mdText);
+            await this.createGanttChartTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'budget-quote' || templateType === 'quote') {
-            await this.createBudgetQuoteTemplate(mdText);
+            await this.createBudgetQuoteTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'meeting-summary' || templateType === 'meeting') {
-            await this.createMeetingSummaryTemplate(mdText);
+            await this.createMeetingSummaryTemplate(mdText, isSilent);
             return;
         } else if (templateType === 'project-goals' || templateType === 'goals') {
-            await this.createProjectGoalsTemplate(mdText);
+            await this.createProjectGoalsTemplate(mdText, isSilent);
             return;
         }
 
-        await this.createPresentationFromMarkdown(mdText);
+        await this.createPresentationFromMarkdown(mdText, isSilent);
     }
 
-    async createPresentationFromMarkdown(mdText) {
+    async createPresentationFromMarkdown(mdText, isSilent = false) {
         if (!mdText || !mdText.trim()) {
-            showToast('El contenido Markdown está vacío.', 'warning');
+            showToast('El contenido Markdown está vacío.', 'warning', isSilent);
             return;
         }
 
@@ -4640,7 +4640,7 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
             sideTextarea.value = mdText;
         }
 
-        showToast('Generando presentación PDF desde Markdown...', 'info');
+        showToast('Generando presentación PDF desde Markdown...', 'info', isSilent);
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
             const doc = await PDFDocument.create();
@@ -4843,10 +4843,10 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'presentacion_markdown.pdf');
-            showToast(`Presentación PDF de ${totalSlides} diapositiva(s) generada con éxito desde Markdown.`, 'success');
+            showToast(`Presentación PDF de ${totalSlides} diapositiva(s) generada con éxito desde Markdown.`, 'success', isSilent);
         } catch (err) {
             console.error('Error al generar presentación desde Markdown:', err);
-            showToast('Error al generar la presentación en PDF.', 'danger');
+            showToast('Error al generar la presentación en PDF.', 'danger', isSilent);
         }
     }
 
@@ -6053,7 +6053,8 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
 }
 
 // Helper Toast Notification
-function showToast(message, type = 'info') {
+function showToast(message, type = 'info', isSilent = false) {
+    if (isSilent) return;
     let container = document.getElementById('toast-container');
     if (!container) {
         container = document.createElement('div');
