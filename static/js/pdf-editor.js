@@ -1664,6 +1664,24 @@ LUGAR: Sala de Conferencias Principal
 | Elena Torres Vega | 65498732F | Especialista QA | Pendiente |
 | Gonzalo Maza Blanco | 98765432G | Analista de Datos | Firmado |
 | Sofía Castro Méndez | 15975346H | Coordinadora | Pendiente |`;
+        } else if (type === 'service-contract' || type === 'contract') {
+            return `# CONTRATO DE PRESTACION DE SERVICIOS
+ESTILO: 1
+NUMERO: CTR-2026-001
+FECHA: 06 de Septiembre de 2026
+LUGAR: Madrid, España
+PRESTADOR: Juan Pérez Gómez\\nNIF/DNI: 12345678A\\nDOMICILIO: Calle Mayor 100, Madrid\\nEMAIL: prestador@empresa.com
+CLIENTE: María López Fernández\\nNIF/DNI: 87654321B\\nDOMICILIO: Av. Gran Vía 45, Madrid\\nEMAIL: cliente@empresa.com
+OBJETO: Prestación de Servicios de Consultoría y Desarrollo Web
+IMPORTE: 1,500.00 EUR
+FORMA_PAGO: 50% al inicio de los trabajos y 50% a la entrega del proyecto.
+
+## CLAUSULAS DEL CONTRATO
+- PRIMERA - OBJETO: EL PRESTADOR se compromete a realizar para EL CLIENTE los servicios detallados en el objeto del presente contrato conforme a los estándares de calidad profesionales.
+- SEGUNDA - PRECIO Y PAGO: EL CLIENTE abonará la cantidad de IMPORTE acordada según la forma de pago estipulada. Los pagos no realizados en fecha devengarán intereses de demora.
+- TERCERA - DURACION: El presente contrato entrará en vigor el día de su firma y finalizará con la entrega del servicio y conformidad de ambas partes.
+- CUARTA - CONFIDENCIALIDAD: Ambas partes acuerdan mantener estricta confidencialidad sobre toda la información comercial y técnica intercambiada.
+- QUINTA - JURISDICCION: Para la resolución de cualquier controversia, las partes se someten expresamente a los Juzgados y Tribunales del lugar de celebración.`;
         } else {
             return this.getDefaultMarkdownSample();
         }
@@ -5360,6 +5378,187 @@ LUGAR: Sala de Conferencias Principal
         } catch (err) {
             console.error('Error al generar hoja de firmas:', err);
             showToast('Error al generar la Hoja de Firmas.', 'danger');
+        }
+    }
+
+    async createServiceContractTemplate(mdText, isSilent = false) {
+        showToast('Generando Contrato de Prestación de Servicios...', 'info', isSilent);
+        try {
+            const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            const page = doc.addPage([595.28, 841.89]); // A4 Portrait
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+            const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+
+            const W = 595.28;
+            const H = 841.89;
+
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
+            const numero = this.getMdVal(mdText, 'NUMERO|CONTRATO', 'CTR-2026-001');
+            const fecha = this.getMdVal(mdText, 'FECHA', '06 de Septiembre de 2026');
+            const lugar = this.getMdVal(mdText, 'LUGAR|CIUDAD', 'Madrid, España');
+            const prestador = this.getMdVal(mdText, 'PRESTADOR|PARTE_A', 'Juan Pérez Gómez\nNIF/DNI: 12345678A\nCalle Mayor 100, Madrid\nprestador@empresa.com');
+            const cliente = this.getMdVal(mdText, 'CLIENTE|PARTE_B', 'María López Fernández\nNIF/DNI: 87654321B\nAv. Gran Vía 45, Madrid\ncliente@empresa.com');
+            const objeto = this.getMdVal(mdText, 'OBJETO|SERVICIO', 'Prestación de Servicios de Consultoría y Desarrollo Web');
+            const importe = this.getMdVal(mdText, 'IMPORTE|PRECIO', '1,500.00 EUR');
+            const formaPago = this.getMdVal(mdText, 'FORMA_PAGO|PAGO', '50% al inicio de los trabajos y 50% a la entrega del proyecto.');
+
+            // Top Header Bar
+            page.drawRectangle({
+                x: 0,
+                y: H - 95,
+                width: W,
+                height: 95,
+                color: theme.headerBg
+            });
+
+            page.drawText('DOCUMENTO LEGAL DE CONTRATACION', {
+                x: 35,
+                y: H - 42,
+                size: 9.5,
+                font: fontBold,
+                color: theme.primary
+            });
+
+            page.drawText('CONTRATO DE PRESTACION DE SERVICIOS', {
+                x: 35,
+                y: H - 68,
+                size: 15,
+                font: fontBold,
+                color: rgb(1, 1, 1)
+            });
+
+            page.drawText(`Nº: ${numero}  |  FECHA: ${fecha}`, {
+                x: 35,
+                y: H - 86,
+                size: 8.5,
+                font: fontReg,
+                color: rgb(0.85, 0.9, 0.98)
+            });
+
+            let currY = H - 115;
+
+            // Parties (Prestador & Cliente) Dual Box
+            const cardW = (W - 80) / 2;
+            page.drawRectangle({
+                x: 35,
+                y: currY - 80,
+                width: cardW,
+                height: 80,
+                color: theme.bg,
+                borderColor: theme.border,
+                borderWidth: 1
+            });
+            page.drawText('EL PRESTADOR (PARTE A):', { x: 45, y: currY - 18, size: 8.5, font: fontBold, color: theme.primary });
+            page.drawText(prestador, { x: 45, y: currY - 32, size: 8, font: fontReg, color: rgb(0.2, 0.25, 0.35), lineHeight: 12 });
+
+            page.drawRectangle({
+                x: 45 + cardW,
+                y: currY - 80,
+                width: cardW,
+                height: 80,
+                color: theme.bg,
+                borderColor: theme.border,
+                borderWidth: 1
+            });
+            page.drawText('EL CLIENTE (PARTE B):', { x: 55 + cardW, y: currY - 18, size: 8.5, font: fontBold, color: theme.primary });
+            page.drawText(cliente, { x: 55 + cardW, y: currY - 32, size: 8, font: fontReg, color: rgb(0.2, 0.25, 0.35), lineHeight: 12 });
+
+            currY -= 95;
+
+            // Object & Fee summary box
+            page.drawRectangle({
+                x: 35,
+                y: currY - 45,
+                width: W - 70,
+                height: 45,
+                color: rgb(0.95, 0.97, 1),
+                borderColor: rgb(0.82, 0.86, 0.92),
+                borderWidth: 1
+            });
+
+            page.drawText(`OBJETO DEL CONTRATO: ${objeto}`, { x: 45, y: currY - 16, size: 9, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+            page.drawText(`IMPORTE ACORDADO: ${importe}   |   FORMA DE PAGO: ${formaPago}`, { x: 45, y: currY - 34, size: 8.5, font: fontReg, color: rgb(0.3, 0.35, 0.45) });
+
+            currY -= 60;
+
+            const wrapText = (text, maxChars = 84) => {
+                if (!text || text.length <= maxChars) return [text];
+                const words = text.split(' ');
+                const lines = [];
+                let currentLine = '';
+                for (const word of words) {
+                    if ((currentLine + ' ' + word).trim().length <= maxChars) {
+                        currentLine = (currentLine + ' ' + word).trim();
+                    } else {
+                        if (currentLine) lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                if (currentLine) lines.push(currentLine);
+                return lines;
+            };
+
+            // Clauses Header
+            page.drawText('CLAUSULAS DEL CONTRATO', { x: 35, y: currY, size: 10, font: fontBold, color: theme.primary });
+            page.drawLine({ start: { x: 35, y: currY - 4 }, end: { x: W - 35, y: currY - 4 }, thickness: 1, color: theme.primary });
+            currY -= 20;
+
+            // Parse Markdown Clauses
+            if (mdText) {
+                const lines = mdText.split('\n').map(l => l.trim());
+                lines.forEach(line => {
+                    if (currY < 150) return;
+
+                    if (line.startsWith('- ') || line.startsWith('* ')) {
+                        const clauseText = line.replace(/^[-*]\s+/, '').trim();
+                        const wrapped = wrapText(clauseText, 80);
+
+                        wrapped.forEach((wLine, idx) => {
+                            if (idx === 0) {
+                                page.drawText('•', { x: 42, y: currY, size: 9, font: fontBold, color: theme.primary });
+                                page.drawText(wLine, { x: 52, y: currY, size: 8.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                            } else {
+                                page.drawText(wLine, { x: 52, y: currY, size: 8.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                            }
+                            currY -= 14;
+                        });
+                        currY -= 4;
+                    }
+                });
+            }
+
+            // Dual Signature Boxes (Prestador & Cliente)
+            const sigY = 110;
+            const sigBoxW = 220;
+
+            // Signature 1: Prestador
+            page.drawLine({ start: { x: 45, y: sigY }, end: { x: 45 + sigBoxW, y: sigY }, thickness: 1, color: rgb(0.6, 0.65, 0.75) });
+            page.drawText('FIRMA DEL PRESTADOR (Parte A)', { x: 45, y: sigY - 14, size: 8, font: fontBold, color: theme.primary });
+            page.drawText('Leído y conforme', { x: 45, y: sigY - 26, size: 7.5, font: fontReg, color: rgb(0.5, 0.55, 0.65) });
+
+            // Signature 2: Cliente
+            page.drawLine({ start: { x: W - 45 - sigBoxW, y: sigY }, end: { x: W - 45, y: sigY }, thickness: 1, color: rgb(0.6, 0.65, 0.75) });
+            page.drawText('FIRMA DEL CLIENTE (Parte B)', { x: W - 45 - sigBoxW, y: sigY - 14, size: 8, font: fontBold, color: theme.primary });
+            page.drawText('Leído y conforme', { x: W - 45 - sigBoxW, y: sigY - 26, size: 7.5, font: fontReg, color: rgb(0.5, 0.55, 0.65) });
+
+            // Footer Place & Date
+            page.drawText(`En ${lugar}, a ${fecha}. Firman ambas partes por duplicado en prueba de conformidad.`, {
+                x: 35,
+                y: 35,
+                size: 7.5,
+                font: fontReg,
+                color: rgb(0.5, 0.55, 0.65)
+            });
+
+            const bytes = await doc.save();
+            await this.loadPDFBytes(bytes, 'contrato_prestacion_servicios.pdf');
+            showToast('Contrato de Prestación de Servicios generado correctamente.', 'success', isSilent);
+        } catch (err) {
+            console.error('Error al generar contrato:', err);
+            showToast('Error al generar el Contrato de Prestación de Servicios.', 'danger');
         }
     }
 
