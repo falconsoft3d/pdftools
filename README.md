@@ -19,24 +19,32 @@ Aplicación web desarrollada con **Flask** para cargar, visualizar, editar y fir
 - Python 3.10+
 - Flask y PyPDF
 
-## 💻 Instrucciones de Ejecución
+## � Despliegue en un solo comando
 
-1. Activa el entorno virtual:
+Puedes ejecutar el despliegue automático ejecutando:
+
 ```bash
-source venv/bin/activate
+./deploy.sh
 ```
 
-2. Instala las dependencias:
+El script detectará automáticamente si tienes **Docker** instalado para levantar el contenedor en producción o, en su defecto, iniciará el servidor WSGI **Gunicorn** en segundo plano en tu entorno local.
+
+---
+
+## 💻 Ejecución Manual
+
+1. Activa el entorno virtual e instala dependencias:
 ```bash
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-3. Inicia el servidor Flask:
+2. Inicia el servidor Flask:
 ```bash
 python app.py
 ```
 
-4. Abre en tu navegador:
+3. Abre en tu navegador:
 ```text
 http://127.0.0.1:5000
 ```
