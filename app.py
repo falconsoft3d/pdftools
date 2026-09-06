@@ -118,7 +118,7 @@ def get_full_stats():
             SELECT ip_address, country, country_code, user_agent, created_at
             FROM visits
             ORDER BY id DESC
-            LIMIT 50
+            LIMIT 5
         ''')
         recent_visits = []
         for r in cursor.fetchall():
