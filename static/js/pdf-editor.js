@@ -1448,7 +1448,7 @@ SALARIO: 35.000 EUR - 45.000 EUR Brutos / Año
 
 CONTACTO: Email: rrhh@empresa.com | Web: www.marlonfalcon.com`;
         } else if (type === 'money-receipt') {
-            return `# COMPROBANTE DE RECEPCION DE DINERO
+            return `# COMPROBANTE DE RECEPCION
 NUMERO: REC-2026-001
 FECHA: 06/09/2026
 PAGADOR: Nombre / Razón Social del cliente que entrega dinero
@@ -2743,16 +2743,16 @@ FORMA_PAGO: [X] Efectivo   [ ] Transferencia Bancaria   [ ] Tarjeta`;
                 color: rgb(0.08, 0.12, 0.22)
             });
 
-            page.drawText('COMPROBANTE DE RECEPCION DE DINERO', {
-                x: 55,
-                y: startY - 38,
-                size: 16,
+            page.drawText('COMPROBANTE DE RECEPCION', {
+                x: 50,
+                y: startY - 36,
+                size: 15,
                 font: fontBold,
                 color: rgb(0.23, 0.51, 0.96)
             });
 
             page.drawText(`RECIBO N: ${numero}`, {
-                x: W - 240,
+                x: W - 220,
                 y: startY - 26,
                 size: 10,
                 font: fontBold,
@@ -2760,7 +2760,7 @@ FORMA_PAGO: [X] Efectivo   [ ] Transferencia Bancaria   [ ] Tarjeta`;
             });
 
             page.drawText(`FECHA DE EMISION: ${fecha}`, {
-                x: W - 240,
+                x: W - 220,
                 y: startY - 44,
                 size: 9.5,
                 font: fontReg,
