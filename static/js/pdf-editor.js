@@ -1591,6 +1591,42 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
 - 100% de procesamiento de archivos realizado en el navegador del cliente.
 - Reducción del tiempo de creación de documentos PDF a menos de 2 minutos utilizando plantillas Markdown.
 - Puntuación de satisfacción de usuario superior al 95% en usabilidad y fluidez.`;
+        } else if (type === 'weekly-calendar' || type === 'calendar') {
+            return `# CALENDARIO SEMANAL / WEEKLY PLANNER
+ESTILO: 1
+TITULO: PLANIFICACION SEMANAL
+SEMANA: Semana del 08 al 14 de Septiembre 2026
+OBJETIVO: Cumplir con los hitos del proyecto y rutinas de entrenamiento
+
+## LUNES
+- 08:00 - 09:30 | Bici
+- 10:00 - 11:30 | Trici
+- 17:00 - 18:00 | Reunión de equipo
+
+## MARTES
+- 09:00 - 10:30 | Desarrollo de funcionalidades
+- 11:00 - 12:00 | Gimnasio
+- 16:00 - 17:30 | Revisión de código
+
+## MIERCOLES
+- 08:30 - 09:30 | Carrera continua
+- 10:00 - 13:00 | Tareas de diseño
+
+## JUEVES
+- 09:00 - 11:00 | Pruebas de integración
+- 17:00 - 18:30 | Bici de montaña
+
+## VIERNES
+- 09:00 - 10:00 | Sync semanal
+- 11:00 - 13:00 | Despliegue a producción
+
+## SABADO
+- 09:00 - 11:00 | Ruta larga en Bici
+- 17:00 - 19:00 | Tiempo libre / Lectura
+
+## DOMINGO
+- 10:00 - 11:30 | Caminata suave
+- 18:00 - 19:00 | Planificación semanal`;
         } else {
             return this.getDefaultMarkdownSample();
         }
@@ -4382,6 +4418,241 @@ Desarrollar y desplegar una plataforma web 100% local, robusta e independiente p
         }
     }
 
+    async createWeeklyCalendarTemplate(mdText, isSilent = false) {
+        showToast('Generando Calendario Semanal / Weekly Planner...', 'info', isSilent);
+        try {
+            const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            const page = doc.addPage([841.89, 595.28]); // A4 Landscape
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+            const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+
+            const W = 841.89;
+            const H = 595.28;
+
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
+            const titulo = this.getMdVal(mdText, 'TITULO|HEADER', 'PLANIFICACION SEMANAL');
+            const semana = this.getMdVal(mdText, 'SEMANA|FECHA', 'Semana del 08 al 14 de Septiembre 2026');
+            const objetivo = this.getMdVal(mdText, 'OBJETIVO|NOTAS', 'Cumplir con los hitos del proyecto y rutinas de entrenamiento');
+
+            // Top Header Bar
+            page.drawRectangle({
+                x: 30,
+                y: H - 85,
+                width: W - 60,
+                height: 60,
+                color: theme.headerBg
+            });
+
+            page.drawText('CALENDARIO SEMANAL / WEEKLY PLANNER', {
+                x: 45,
+                y: H - 45,
+                size: 9.5,
+                font: fontBold,
+                color: theme.primary
+            });
+
+            page.drawText(`${titulo} - ${semana}`, {
+                x: 45,
+                y: H - 68,
+                size: 13,
+                font: fontBold,
+                color: rgb(1, 1, 1)
+            });
+
+            // Parse Days and Tasks
+            const dayNames = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
+            const dayTasks = {};
+            dayNames.forEach(d => dayTasks[d] = []);
+
+            let currentDay = null;
+
+            if (mdText) {
+                const lines = mdText.split('\n').map(l => l.trim());
+                lines.forEach(line => {
+                    if (line.startsWith('## ')) {
+                        const header = line.replace(/^##\s+/, '').toUpperCase();
+                        const matchedDay = dayNames.find(d => header.includes(d) || (d === 'MIERCOLES' && header.includes('MIÉRCOLES')) || (d === 'SABADO' && header.includes('SÁBADO')));
+                        if (matchedDay) {
+                            currentDay = matchedDay;
+                        } else {
+                            currentDay = null;
+                        }
+                    } else if (currentDay && (line.startsWith('- ') || line.startsWith('* '))) {
+                        const rawItem = line.replace(/^[-*]\s+/, '').trim();
+                        let timeStr = '';
+                        let taskName = rawItem;
+
+                        if (rawItem.includes('|')) {
+                            const parts = rawItem.split('|').map(p => p.trim());
+                            timeStr = parts[0];
+                            taskName = parts.slice(1).join(' | ');
+                        } else if (/^\d{1,2}:\d{2}/.test(rawItem)) {
+                            const timeMatch = rawItem.match(/^(\d{1,2}:\d{2}\s*(?:-\s*\d{1,2}:\d{2})?)\s*(.*)/);
+                            if (timeMatch) {
+                                timeStr = timeMatch[1].trim();
+                                taskName = timeMatch[2].replace(/^[-|:]\s*/, '').trim() || timeMatch[1];
+                            }
+                        }
+
+                        let sortMinutes = 9999;
+                        if (timeStr) {
+                            const m = timeStr.match(/(\d{1,2}):(\d{2})/);
+                            if (m) {
+                                sortMinutes = parseInt(m[1]) * 60 + parseInt(m[2]);
+                            }
+                        }
+
+                        dayTasks[currentDay].push({
+                            time: timeStr,
+                            name: taskName,
+                            sortMinutes: sortMinutes
+                        });
+                    }
+                });
+            }
+
+            // Sort tasks by time for each day
+            dayNames.forEach(d => {
+                dayTasks[d].sort((a, b) => a.sortMinutes - b.sortMinutes);
+            });
+
+            // Layout Dimensions
+            const startY = H - 95;
+            const availableW = W - 60;
+            const numCols = 7;
+            const gap = 5;
+            const colW = (availableW - (gap * (numCols - 1))) / numCols;
+            const colH = 430;
+
+            const wrapTaskText = (text, maxChars = 14) => {
+                if (!text || text.length <= maxChars) return [text];
+                const words = text.split(' ');
+                const lines = [];
+                let currentLine = '';
+                for (const word of words) {
+                    if ((currentLine + ' ' + word).trim().length <= maxChars) {
+                        currentLine = (currentLine + ' ' + word).trim();
+                    } else {
+                        if (currentLine) lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                if (currentLine) lines.push(currentLine);
+                return lines;
+            };
+
+            // Render Columns for Days
+            dayNames.forEach((dName, cIdx) => {
+                const cx = 30 + cIdx * (colW + gap);
+                const cy = startY - colH;
+
+                // Day Column Container
+                page.drawRectangle({
+                    x: cx,
+                    y: cy,
+                    width: colW,
+                    height: colH,
+                    color: theme.bg,
+                    borderColor: theme.border,
+                    borderWidth: 1
+                });
+
+                // Day Column Header
+                page.drawRectangle({
+                    x: cx,
+                    y: startY - 24,
+                    width: colW,
+                    height: 24,
+                    color: theme.primary
+                });
+
+                page.drawText(dName, {
+                    x: cx + colW / 2 - Math.min(colW / 2 - 4, dName.length * 3),
+                    y: startY - 16,
+                    size: 9,
+                    font: fontBold,
+                    color: rgb(1, 1, 1)
+                });
+
+                // Render Task Cards in Column
+                const tasks = dayTasks[dName] || [];
+                let taskY = startY - 32;
+
+                tasks.forEach((t) => {
+                    if (taskY < cy + 10) return;
+
+                    const tLines = wrapTaskText(t.name, 14);
+                    const cardH = Math.max(26, tLines.length * 11 + (t.time ? 14 : 6));
+
+                    page.drawRectangle({
+                        x: cx + 3,
+                        y: taskY - cardH,
+                        width: colW - 6,
+                        height: cardH,
+                        color: rgb(1, 1, 1),
+                        borderColor: rgb(0.85, 0.88, 0.92),
+                        borderWidth: 0.8
+                    });
+
+                    // Time badge line
+                    let textY = taskY - 10;
+                    if (t.time) {
+                        page.drawText(t.time, {
+                            x: cx + 6,
+                            y: textY,
+                            size: 7.5,
+                            font: fontBold,
+                            color: theme.primary
+                        });
+                        textY -= 11;
+                    }
+
+                    tLines.forEach((tLine) => {
+                        page.drawText(tLine, {
+                            x: cx + 6,
+                            y: textY,
+                            size: 8,
+                            font: fontReg,
+                            color: rgb(0.15, 0.2, 0.3)
+                        });
+                        textY -= 10;
+                    });
+
+                    taskY -= (cardH + 4);
+                });
+            });
+
+            // Footer Objective Bar
+            page.drawRectangle({
+                x: 30,
+                y: 18,
+                width: W - 60,
+                height: 24,
+                color: rgb(0.96, 0.97, 0.99),
+                borderColor: rgb(0.88, 0.9, 0.94),
+                borderWidth: 0.8
+            });
+
+            page.drawText(`OBJETIVO SEMANAL: ${objetivo}`, {
+                x: 42,
+                y: 25,
+                size: 8.5,
+                font: fontBold,
+                color: theme.textDark
+            });
+
+            const bytes = await doc.save();
+            await this.loadPDFBytes(bytes, 'calendario_semanal.pdf');
+            showToast('Calendario Semanal / Weekly Planner generado correctamente.', 'success', isSilent);
+        } catch (err) {
+            console.error('Error al generar calendario semanal:', err);
+            showToast('Error al generar el Calendario Semanal.', 'danger');
+        }
+    }
+
     initMarkdownModal() {
         const modal = document.getElementById('markdown-modal');
         const openHeaderBtn = document.getElementById('btn-open-markdown-modal');
@@ -4672,6 +4943,9 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
             return;
         } else if (templateType === 'project-goals' || templateType === 'goals') {
             await this.createProjectGoalsTemplate(mdText, isSilent);
+            return;
+        } else if (templateType === 'weekly-calendar' || templateType === 'calendar') {
+            await this.createWeeklyCalendarTemplate(mdText, isSilent);
             return;
         }
 
