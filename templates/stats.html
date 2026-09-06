@@ -15,6 +15,9 @@
     <!-- App Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
+    <!-- Google Charts for GeoChart World Map -->
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+
     <style>
         body {
             overflow-y: auto !important;
@@ -217,6 +220,15 @@
             </div>
         </div>
 
+        <!-- World Map Section -->
+        <div class="stats-section">
+            <div class="section-title">
+                <i class="fas fa-globe" style="color: var(--accent-primary);"></i>
+                Mapa Mundial de Visitas por Países
+            </div>
+            <div id="world-map-container" style="width: 100%; min-height: 380px; border-radius: 8px; overflow: hidden;"></div>
+        </div>
+
         <!-- Country Breakdown -->
         <div class="stats-section">
             <div class="section-title">
@@ -287,6 +299,48 @@
             </div>
         </div>
     </div>
+
+    <script>
+        google.charts.load('current', {
+            'packages': ['geochart']
+        });
+        google.charts.setOnLoadCallback(drawRegionsMap);
+
+        function drawRegionsMap() {
+            const rawData = [
+                ['País', 'Visitas'],
+                {% for item in stats.by_country %}
+                ['{{ item.country_code }}', {{ item.count }}],
+                {% endfor %}
+            ];
+
+            if (rawData.length <= 1) {
+                rawData.push(['ES', 1]);
+            }
+
+            const data = google.visualization.arrayToDataTable(rawData);
+
+            const options = {
+                backgroundColor: '#1e293b',
+                datalessRegionColor: '#0f172a',
+                defaultColor: '#334155',
+                colorAxis: { colors: ['#93c5fd', '#3b82f6', '#1d4ed8', '#1e3a8a'] },
+                legend: 'none'
+            };
+
+            const container = document.getElementById('world-map-container');
+            if (container) {
+                const chart = new google.visualization.GeoChart(container);
+                chart.draw(data, options);
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            if (window.google && google.visualization) {
+                drawRegionsMap();
+            }
+        });
+    </script>
 
 </body>
 </html>
