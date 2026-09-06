@@ -1329,6 +1329,8 @@ class PDFEditor {
             await this.createDesktopWireframeTemplate();
         } else if (type === 'job-offer') {
             await this.createJobOfferTemplate();
+        } else if (type === 'money-receipt') {
+            await this.createMoneyReceiptTemplate();
         } else if (type === 'presentation' || type === 'presentation-4pages') {
             await this.createPresentationTemplate();
         } else {
@@ -2490,6 +2492,140 @@ class PDFEditor {
         } catch (err) {
             console.error('Error al generar oferta de empleo:', err);
             showToast('Error al generar plantilla de oferta de empleo.', 'danger');
+        }
+    }
+
+    async createMoneyReceiptTemplate() {
+        showToast('Generando Comprobante de Recepción de Dinero...', 'info');
+        try {
+            const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            const page = doc.addPage([595.28, 841.89]); // A4 Portrait
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+            const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+
+            const W = 595.28;
+            const H = 841.89;
+
+            const todayStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+            // Helper to draw a single receipt block at offset Y
+            const drawReceiptBlock = (startY, titleTag) => {
+                // Header Bar
+                page.drawRectangle({
+                    x: 30,
+                    y: startY - 45,
+                    width: W - 60,
+                    height: 45,
+                    color: rgb(0.08, 0.12, 0.22)
+                });
+
+                page.drawText('COMPROBANTE DE RECEPCION DE DINERO', {
+                    x: 45,
+                    y: startY - 30,
+                    size: 13,
+                    font: fontBold,
+                    color: rgb(0.23, 0.51, 0.96)
+                });
+
+                page.drawText(`RECIBO N: REC-2026-001  |  ${titleTag}`, {
+                    x: W - 260,
+                    y: startY - 20,
+                    size: 9,
+                    font: fontBold,
+                    color: rgb(1, 1, 1)
+                });
+
+                page.drawText(`FECHA: ${todayStr}`, {
+                    x: W - 260,
+                    y: startY - 35,
+                    size: 9,
+                    font: fontReg,
+                    color: rgb(0.8, 0.85, 0.95)
+                });
+
+                // Main Info Box
+                const boxY = startY - 215;
+                page.drawRectangle({
+                    x: 30,
+                    y: boxY,
+                    width: W - 60,
+                    height: 160,
+                    borderWidth: 1.5,
+                    borderColor: rgb(0.23, 0.51, 0.96),
+                    color: rgb(0.98, 0.99, 1)
+                });
+
+                // Row 1: De (Pagador)
+                page.drawText('DE (PAGADOR):', { x: 45, y: startY - 75, size: 10, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+                page.drawText('Nombre / Razon Social del cliente o persona que entrega el dinero', { x: 155, y: startY - 75, size: 9.5, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
+                page.drawLine({ start: { x: 150, y: startY - 78 }, end: { x: W - 45, y: startY - 78 }, thickness: 0.8, color: rgb(0.7, 0.75, 0.85) });
+
+                // Row 2: Recibe (Beneficiario)
+                page.drawText('RECIBE (COBRADOR):', { x: 45, y: startY - 105, size: 10, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+                page.drawText('Marlon Falcon Hernandez / Empresa que recibe el dinero', { x: 185, y: startY - 105, size: 9.5, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
+                page.drawLine({ start: { x: 180, y: startY - 108 }, end: { x: W - 45, y: startY - 108 }, thickness: 0.8, color: rgb(0.7, 0.75, 0.85) });
+
+                // Row 3: Importe (Monto numerico y en letras)
+                page.drawText('IMPORTE:', { x: 45, y: startY - 135, size: 10, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+                page.drawRectangle({ x: 110, y: startY - 142, width: 120, height: 20, color: rgb(0.23, 0.51, 0.96) });
+                page.drawText('0.00 EUR', { x: 120, y: startY - 136, size: 11, font: fontBold, color: rgb(1, 1, 1) });
+
+                page.drawText('SON:', { x: 245, y: startY - 135, size: 10, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+                page.drawText('Cero Euros con 00/100 Cts.', { x: 280, y: startY - 135, size: 9.5, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
+                page.drawLine({ start: { x: 275, y: startY - 138 }, end: { x: W - 45, y: startY - 138 }, thickness: 0.8, color: rgb(0.7, 0.75, 0.85) });
+
+                // Row 4: Concepto
+                page.drawText('EN CONCEPTO DE:', { x: 45, y: startY - 165, size: 10, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+                page.drawText('Pago por concepto de servicios prestados / anticipo / saldo pendiente', { x: 160, y: startY - 165, size: 9.5, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
+                page.drawLine({ start: { x: 155, y: startY - 168 }, end: { x: W - 45, y: startY - 168 }, thickness: 0.8, color: rgb(0.7, 0.75, 0.85) });
+
+                // Row 5: Forma de Pago
+                page.drawText('FORMA DE PAGO: [X] Efectivo   [ ] Transferencia   [ ] Tarjeta   [ ] Cheque', {
+                    x: 45,
+                    y: startY - 198,
+                    size: 9,
+                    font: fontReg,
+                    color: rgb(0.3, 0.35, 0.45)
+                });
+
+                // Signatures
+                const sigY = startY - 290;
+                page.drawLine({ start: { x: 60, y: sigY }, end: { x: 240, y: sigY }, thickness: 1, color: rgb(0.6, 0.6, 0.6) });
+                page.drawText('Firma de Quien Entrega (De)', { x: 80, y: sigY - 15, size: 8, font: fontReg, color: rgb(0.4, 0.4, 0.4) });
+
+                page.drawLine({ start: { x: W - 240, y: sigY }, end: { x: W - 60, y: sigY }, thickness: 1, color: rgb(0.6, 0.6, 0.6) });
+                page.drawText('Firma de Quien Recibe (Recibe)', { x: W - 220, y: sigY - 15, size: 8, font: fontReg, color: rgb(0.4, 0.4, 0.4) });
+            };
+
+            // Draw Top Receipt (Original)
+            drawReceiptBlock(H - 25, 'ORIGINAL');
+
+            // Cut Line in Middle
+            const midY = H / 2;
+            page.drawLine({
+                start: { x: 15, y: midY },
+                end: { x: W - 15, y: midY },
+                thickness: 0.8,
+                color: rgb(0.6, 0.65, 0.75)
+            });
+            page.drawText('--- RECORTAR POR LA LINEA ---', {
+                x: W / 2 - 75,
+                y: midY - 3,
+                size: 7,
+                font: fontBold,
+                color: rgb(0.6, 0.65, 0.75)
+            });
+
+            // Draw Bottom Receipt (Copia)
+            drawReceiptBlock(midY - 25, 'COPIA');
+
+            const bytes = await doc.save();
+            await this.loadPDFBytes(bytes, 'comprobante_recibo_dinero.pdf');
+            showToast('Plantilla de Comprobante de Recepción de Dinero (Original + Copia) lista.', 'success');
+        } catch (err) {
+            console.error('Error al generar comprobante de dinero:', err);
+            showToast('Error al generar el comprobante de dinero.', 'danger');
         }
     }
 
