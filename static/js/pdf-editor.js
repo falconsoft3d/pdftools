@@ -1456,6 +1456,16 @@ COBRADOR: Marlon Falcón Hernández / Empresa que recibe
 IMPORTE: 500.00 EUR
 CONCEPTO: Pago por concepto de servicios prestados / anticipo
 FORMA_PAGO: [X] Efectivo   [ ] Transferencia Bancaria   [ ] Tarjeta`;
+        } else if (type === 'whatsapp-status') {
+            return `# ESTADO DE WHATSAPP / STORY
+ESTILO: 1
+TITULO: NUEVO PROYECTO 2026
+SUBTITULO: Transformación Digital & Innovación
+MENSAJE: Desarrollamos soluciones ágiles, modernas y 100% locales sin dependencias externas en la nube.
+AUTOR: Marlon Falcón
+SITIO_WEB: www.marlonfalcon.com
+CONTACTO: +34 600 000 000
+HASHTAG: #SoftwareDev #Tech2026 #PDFTools`;
         } else {
             return this.getDefaultMarkdownSample();
         }
@@ -2841,6 +2851,356 @@ FORMA_PAGO: [X] Efectivo   [ ] Transferencia Bancaria   [ ] Tarjeta`;
         }
     }
 
+    async createWhatsAppStatusTemplate(mdText) {
+        showToast('Generando Estado de WhatsApp / Story vertical...', 'info');
+        try {
+            const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            // Vertical Story 9:16 canvas (432 x 768 pt)
+            const W = 432;
+            const H = 768;
+            const page = doc.addPage([W, H]);
+
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+            const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+            const fontOblique = await doc.embedFont(StandardFonts.HelveticaOblique);
+
+            const estiloVal = parseInt(this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1')) || 1;
+            const estilo = Math.max(1, Math.min(10, estiloVal));
+
+            const titulo = this.getMdVal(mdText, 'TITULO|HEADER', 'NUEVO PROYECTO 2026');
+            const subtitulo = this.getMdVal(mdText, 'SUBTITULO', 'Transformación Digital & Innovación');
+            const mensaje = this.getMdVal(mdText, 'MENSAJE|DESCRIPCION|TEXTO', 'Desarrollamos soluciones ágiles, modernas y 100% locales sin dependencias externas en la nube.');
+            const autor = this.getMdVal(mdText, 'AUTOR|NOMBRE', 'Marlon Falcón');
+            const web = this.getMdVal(mdText, 'SITIO_WEB|WEB|LINK', 'www.marlonfalcon.com');
+            const contacto = this.getMdVal(mdText, 'CONTACTO|TEL|TELEFONO', '+34 600 000 000');
+            const hashtag = this.getMdVal(mdText, 'HASHTAG|TAGS', '#SoftwareDev #Tech2026 #PDFTools');
+
+            const wrapText = (text, maxChars = 38) => {
+                if (!text || text.length <= maxChars) return [text];
+                const words = text.split(' ');
+                const lines = [];
+                let currentLine = '';
+                for (const word of words) {
+                    if ((currentLine + ' ' + word).trim().length <= maxChars) {
+                        currentLine = (currentLine + ' ' + word).trim();
+                    } else {
+                        if (currentLine) lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                if (currentLine) lines.push(currentLine);
+                return lines;
+            };
+
+            // RENDER ACCORDING TO STYLE (1 to 10)
+            if (estilo === 1) {
+                // Style 1: Neon Cyberpunk (Dark background, glowing cyan & purple borders)
+                page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(0.04, 0.06, 0.12) });
+
+                // Top Badge
+                page.drawRectangle({ x: 20, y: H - 50, width: W - 40, height: 26, color: rgb(0.08, 0.12, 0.22), borderColor: rgb(0.23, 0.51, 0.96), borderWidth: 1 });
+                page.drawText('ESTADO - NEON CYBERPUNK (1/10)', { x: 32, y: H - 42, size: 9, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+
+                // Title Banner
+                page.drawRectangle({ x: 20, y: H - 190, width: W - 40, height: 125, color: rgb(0.08, 0.12, 0.22), borderColor: rgb(0.7, 0.2, 0.9), borderWidth: 2 });
+                page.drawText(titulo, { x: 35, y: H - 110, size: 20, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+                page.drawText(subtitulo, { x: 35, y: H - 145, size: 12, font: fontReg, color: rgb(0.8, 0.85, 0.95) });
+
+                // Main Message Box
+                page.drawRectangle({ x: 20, y: 160, width: W - 40, height: 380, color: rgb(0.06, 0.08, 0.16), borderColor: rgb(0.23, 0.51, 0.96), borderWidth: 1.5 });
+                let my = H - 240;
+                const lines = wrapText(mensaje, 34);
+                lines.forEach(l => {
+                    page.drawText(l, { x: 40, y: my, size: 13, font: fontReg, color: rgb(1, 1, 1) });
+                    my -= 24;
+                });
+
+                // Footer Box
+                page.drawRectangle({ x: 20, y: 30, width: W - 40, height: 110, color: rgb(0.08, 0.12, 0.22), borderColor: rgb(0.7, 0.2, 0.9), borderWidth: 1 });
+                page.drawText(`AUTOR: ${autor}`, { x: 35, y: 105, size: 10.5, font: fontBold, color: rgb(1, 1, 1) });
+                page.drawText(`WEB: ${web}  |  TEL: ${contacto}`, { x: 35, y: 82, size: 9.5, font: fontReg, color: rgb(0.23, 0.51, 0.96) });
+                page.drawText(hashtag, { x: 35, y: 55, size: 9, font: fontOblique, color: rgb(0.7, 0.2, 0.9) });
+
+            } else if (estilo === 2) {
+                // Style 2: Gradient Sunset (Warm Dark Purple to Magenta/Orange)
+                page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(0.18, 0.08, 0.28) });
+                page.drawRectangle({ x: 0, y: H - 220, width: W, height: 220, color: rgb(0.85, 0.2, 0.5) });
+                page.drawRectangle({ x: 0, y: 0, width: W, height: 90, color: rgb(0.96, 0.45, 0.2) });
+
+                // Top Badge
+                page.drawText('ESTADO - GRADIENT SUNSET (2/10)', { x: 25, y: H - 35, size: 9, font: fontBold, color: rgb(1, 1, 1) });
+
+                // Title
+                page.drawText(titulo, { x: 25, y: H - 110, size: 22, font: fontBold, color: rgb(1, 1, 1) });
+                page.drawText(subtitulo, { x: 25, y: H - 150, size: 13, font: fontReg, color: rgb(0.98, 0.85, 0.9) });
+
+                // Content Box
+                page.drawRectangle({ x: 20, y: 120, width: W - 40, height: 410, color: rgb(0.1, 0.04, 0.16) });
+                let my = 490;
+                const lines = wrapText(mensaje, 32);
+                lines.forEach(l => {
+                    page.drawText(l, { x: 40, y: my, size: 14, font: fontReg, color: rgb(0.98, 0.98, 0.98) });
+                    my -= 26;
+                });
+
+                // Footer
+                page.drawText(autor.toUpperCase(), { x: 25, y: 55, size: 12, font: fontBold, color: rgb(1, 1, 1) });
+                page.drawText(`${web}  *  ${contacto}`, { x: 25, y: 35, size: 9.5, font: fontReg, color: rgb(0.1, 0.04, 0.16) });
+
+            } else if (estilo === 3) {
+                // Style 3: Minimalist Clean (Editorial White with Double Frame & Gold Accent)
+                page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(0.98, 0.98, 0.98) });
+
+                // Double Frame
+                page.drawRectangle({ x: 15, y: 15, width: W - 30, height: H - 30, borderWidth: 2, borderColor: rgb(0.1, 0.1, 0.1) });
+                page.drawRectangle({ x: 22, y: 22, width: W - 44, height: H - 44, borderWidth: 1, borderColor: rgb(0.85, 0.68, 0.2) });
+
+                // Top Badge
+                page.drawText('ESTADO - MINIMALIST CLEAN (3/10)', { x: 40, y: H - 50, size: 8.5, font: fontBold, color: rgb(0.85, 0.68, 0.2) });
+
+                // Header
+                page.drawText(titulo, { x: 40, y: H - 110, size: 20, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
+                page.drawText(subtitulo, { x: 40, y: H - 140, size: 11.5, font: fontOblique, color: rgb(0.4, 0.4, 0.4) });
+
+                page.drawLine({ start: { x: 40, y: H - 165 }, end: { x: W - 40, y: H - 165 }, thickness: 1, color: rgb(0.85, 0.68, 0.2) });
+
+                // Body Message
+                let my = H - 210;
+                const lines = wrapText(mensaje, 34);
+                lines.forEach(l => {
+                    page.drawText(l, { x: 40, y: my, size: 13, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
+                    my -= 24;
+                });
+
+                page.drawLine({ start: { x: 40, y: 120 }, end: { x: W - 40, y: 120 }, thickness: 1, color: rgb(0.85, 0.68, 0.2) });
+
+                // Footer
+                page.drawText(autor, { x: 40, y: 90, size: 11, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
+                page.drawText(`${web}  |  ${contacto}`, { x: 40, y: 68, size: 9, font: fontReg, color: rgb(0.4, 0.4, 0.4) });
+                page.drawText(hashtag, { x: 40, y: 48, size: 8.5, font: fontOblique, color: rgb(0.85, 0.68, 0.2) });
+
+            } else if (estilo === 4) {
+                // Style 4: Business Promo (Navy & Bright Blue Card)
+                page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(0.08, 0.12, 0.22) });
+
+                // Top Banner
+                page.drawRectangle({ x: 0, y: H - 160, width: W, height: 160, color: rgb(0.23, 0.51, 0.96) });
+
+                page.drawText('ESTADO - BUSINESS PROMO (4/10)', { x: 25, y: H - 30, size: 8.5, font: fontBold, color: rgb(1, 1, 1) });
+                page.drawText(titulo, { x: 25, y: H - 85, size: 21, font: fontBold, color: rgb(1, 1, 1) });
+                page.drawText(subtitulo, { x: 25, y: H - 120, size: 12, font: fontReg, color: rgb(0.9, 0.95, 1) });
+
+                // Center White Box
+                page.drawRectangle({ x: 20, y: 160, width: W - 40, height: 420, color: rgb(0.98, 0.99, 1), borderWidth: 2, borderColor: rgb(0.23, 0.51, 0.96) });
+
+                let my = 540;
+                const lines = wrapText(mensaje, 32);
+                lines.forEach(l => {
+                    page.drawText(l, { x: 40, y: my, size: 13, font: fontReg, color: rgb(0.15, 0.2, 0.3) });
+                    my -= 24;
+                });
+
+                // Call to action box at bottom
+                page.drawRectangle({ x: 20, y: 30, width: W - 40, height: 110, color: rgb(0.12, 0.18, 0.32), borderColor: rgb(0.23, 0.51, 0.96), borderWidth: 1 });
+                page.drawText(`CONTACTO: ${autor}`, { x: 35, y: 102, size: 11, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+                page.drawText(`Web: ${web}`, { x: 35, y: 80, size: 9.5, font: fontReg, color: rgb(0.9, 0.95, 1) });
+                page.drawText(`Tel: ${contacto}`, { x: 35, y: 60, size: 9.5, font: fontReg, color: rgb(0.9, 0.95, 1) });
+                page.drawText(hashtag, { x: 35, y: 42, size: 8.5, font: fontOblique, color: rgb(0.6, 0.7, 0.8) });
+
+            } else if (estilo === 5) {
+                // Style 5: Nature Eco (Emerald Forest Green & Cream)
+                page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(0.05, 0.2, 0.15) });
+
+                // Top Badge
+                page.drawRectangle({ x: 20, y: H - 45, width: W - 40, height: 24, color: rgb(0.1, 0.3, 0.22) });
+                page.drawText('ESTADO - NATURE ECO (5/10)', { x: 32, y: H - 38, size: 8.5, font: fontBold, color: rgb(0.3, 0.85, 0.55) });
+
+                // Main Title Box
+                page.drawRectangle({ x: 20, y: H - 180, width: W - 40, height: 120, color: rgb(0.1, 0.3, 0.22), borderColor: rgb(0.3, 0.85, 0.55), borderWidth: 1.5 });
+                page.drawText(titulo, { x: 35, y: H - 110, size: 20, font: fontBold, color: rgb(0.95, 0.96, 0.92) });
+                page.drawText(subtitulo, { x: 35, y: H - 145, size: 12, font: fontReg, color: rgb(0.3, 0.85, 0.55) });
+
+                // Body Message
+                page.drawRectangle({ x: 20, y: 150, width: W - 40, height: 380, color: rgb(0.08, 0.25, 0.18) });
+                let my = H - 230;
+                const lines = wrapText(mensaje, 34);
+                lines.forEach(l => {
+                    page.drawText(l, { x: 40, y: my, size: 13, font: fontReg, color: rgb(0.95, 0.96, 0.92) });
+                    my -= 24;
+                });
+
+                // Footer Box
+                page.drawRectangle({ x: 20, y: 30, width: W - 40, height: 100, color: rgb(0.1, 0.3, 0.22) });
+                page.drawText(autor, { x: 35, y: 98, size: 11, font: fontBold, color: rgb(0.3, 0.85, 0.55) });
+                page.drawText(`${web}  |  ${contacto}`, { x: 35, y: 76, size: 9.5, font: fontReg, color: rgb(0.9, 0.95, 0.9) });
+                page.drawText(hashtag, { x: 35, y: 52, size: 8.5, font: fontOblique, color: rgb(0.6, 0.8, 0.7) });
+
+            } else if (estilo === 6) {
+                // Style 6: Luxury Gold (Jet Black & Gold Accents)
+                page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(0.05, 0.05, 0.05) });
+
+                // Gold Frame
+                page.drawRectangle({ x: 18, y: 18, width: W - 36, height: H - 36, borderWidth: 2, borderColor: rgb(0.85, 0.68, 0.2) });
+
+                // Top Badge
+                page.drawText('ESTADO - LUXURY GOLD (6/10)', { x: 35, y: H - 45, size: 8.5, font: fontBold, color: rgb(0.85, 0.68, 0.2) });
+
+                // Gold Banner Title
+                page.drawRectangle({ x: 30, y: H - 180, width: W - 60, height: 120, color: rgb(0.12, 0.11, 0.08), borderColor: rgb(0.85, 0.68, 0.2), borderWidth: 1 });
+                page.drawText(titulo, { x: 45, y: H - 110, size: 20, font: fontBold, color: rgb(0.85, 0.68, 0.2) });
+                page.drawText(subtitulo, { x: 45, y: H - 145, size: 12, font: fontReg, color: rgb(0.9, 0.9, 0.9) });
+
+                // Body Message Box
+                page.drawRectangle({ x: 30, y: 150, width: W - 60, height: 380, color: rgb(0.08, 0.08, 0.08) });
+                let my = H - 230;
+                const lines = wrapText(mensaje, 32);
+                lines.forEach(l => {
+                    page.drawText(l, { x: 45, y: my, size: 13, font: fontReg, color: rgb(0.95, 0.95, 0.95) });
+                    my -= 24;
+                });
+
+                // Footer
+                page.drawLine({ start: { x: 35, y: 130 }, end: { x: W - 35, y: 130 }, thickness: 1, color: rgb(0.85, 0.68, 0.2) });
+                page.drawText(autor.toUpperCase(), { x: 35, y: 100, size: 11, font: fontBold, color: rgb(0.85, 0.68, 0.2) });
+                page.drawText(`${web}  |  ${contacto}`, { x: 35, y: 78, size: 9, font: fontReg, color: rgb(0.8, 0.8, 0.8) });
+                page.drawText(hashtag, { x: 35, y: 55, size: 8.5, font: fontOblique, color: rgb(0.6, 0.5, 0.3) });
+
+            } else if (estilo === 7) {
+                // Style 7: Pastel Aesthetic (Soft Lavender & White Card)
+                page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(0.92, 0.9, 0.98) });
+
+                // Top Badge
+                page.drawText('ESTADO - PASTEL AESTHETIC (7/10)', { x: 30, y: H - 40, size: 8.5, font: fontBold, color: rgb(0.55, 0.35, 0.85) });
+
+                // Big White Floating Card
+                page.drawRectangle({ x: 25, y: 40, width: W - 50, height: H - 100, color: rgb(1, 1, 1), borderWidth: 2, borderColor: rgb(0.82, 0.78, 0.92) });
+
+                // Title Inside Card
+                page.drawRectangle({ x: 40, y: H - 180, width: W - 80, height: 100, color: rgb(0.96, 0.94, 0.99) });
+                page.drawText(titulo, { x: 55, y: H - 120, size: 19, font: fontBold, color: rgb(0.4, 0.2, 0.7) });
+                page.drawText(subtitulo, { x: 55, y: H - 150, size: 11.5, font: fontReg, color: rgb(0.55, 0.35, 0.85) });
+
+                // Body Message
+                let my = H - 220;
+                const lines = wrapText(mensaje, 30);
+                lines.forEach(l => {
+                    page.drawText(l, { x: 55, y: my, size: 12.5, font: fontReg, color: rgb(0.25, 0.2, 0.35) });
+                    my -= 24;
+                });
+
+                // Footer inside card
+                page.drawLine({ start: { x: 40, y: 130 }, end: { x: W - 40, y: 130 }, thickness: 1, color: rgb(0.9, 0.85, 0.95) });
+                page.drawText(autor, { x: 55, y: 102, size: 11, font: fontBold, color: rgb(0.4, 0.2, 0.7) });
+                page.drawText(`${web}  |  ${contacto}`, { x: 55, y: 82, size: 9, font: fontReg, color: rgb(0.5, 0.45, 0.6) });
+                page.drawText(hashtag, { x: 55, y: 62, size: 8.5, font: fontOblique, color: rgb(0.65, 0.45, 0.85) });
+
+            } else if (estilo === 8) {
+                // Style 8: Bold High Impact (Bright Yellow & Thick Black Typography)
+                page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(0.98, 0.82, 0.1) });
+
+                // Top Badge
+                page.drawRectangle({ x: 0, y: H - 45, width: W, height: 45, color: rgb(0.08, 0.08, 0.08) });
+                page.drawText('ESTADO - BOLD HIGH IMPACT (8/10)', { x: 20, y: H - 28, size: 9, font: fontBold, color: rgb(0.98, 0.82, 0.1) });
+
+                // Giant Black Title Box
+                page.drawRectangle({ x: 20, y: H - 210, width: W - 40, height: 140, color: rgb(0.08, 0.08, 0.08) });
+                page.drawText(titulo, { x: 35, y: H - 120, size: 21, font: fontBold, color: rgb(0.98, 0.82, 0.1) });
+                page.drawText(subtitulo, { x: 35, y: H - 160, size: 13, font: fontBold, color: rgb(1, 1, 1) });
+
+                // Message Box
+                page.drawRectangle({ x: 20, y: 160, width: W - 40, height: 370, color: rgb(1, 1, 1), borderWidth: 3, borderColor: rgb(0.08, 0.08, 0.08) });
+                let my = 490;
+                const lines = wrapText(mensaje, 30);
+                lines.forEach(l => {
+                    page.drawText(l, { x: 40, y: my, size: 14, font: fontBold, color: rgb(0.08, 0.08, 0.08) });
+                    my -= 26;
+                });
+
+                // Footer Box
+                page.drawRectangle({ x: 20, y: 30, width: W - 40, height: 110, color: rgb(0.08, 0.08, 0.08) });
+                page.drawText(autor.toUpperCase(), { x: 35, y: 102, size: 12, font: fontBold, color: rgb(0.98, 0.82, 0.1) });
+                page.drawText(`${web}  |  ${contacto}`, { x: 35, y: 78, size: 9.5, font: fontBold, color: rgb(1, 1, 1) });
+                page.drawText(hashtag, { x: 35, y: 54, size: 9, font: fontBold, color: rgb(0.98, 0.82, 0.1) });
+
+            } else if (estilo === 9) {
+                // Style 9: Dark Quote / Inspiration (Charcoal Gray & Quotation Style)
+                page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(0.12, 0.14, 0.18) });
+
+                // Top Badge
+                page.drawText('ESTADO - DARK INSPIRATION (9/10)', { x: 30, y: H - 40, size: 8.5, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+
+                // Giant Quotation Mark
+                page.drawText('“', { x: 30, y: H - 130, size: 90, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+
+                // Title
+                page.drawText(titulo, { x: 30, y: H - 170, size: 20, font: fontBold, color: rgb(1, 1, 1) });
+                page.drawText(subtitulo, { x: 30, y: H - 200, size: 12, font: fontOblique, color: rgb(0.23, 0.51, 0.96) });
+
+                // Body Quote Box
+                page.drawRectangle({ x: 25, y: 140, width: W - 50, height: 370, color: rgb(0.08, 0.09, 0.12), borderColor: rgb(0.2, 0.25, 0.35), borderWidth: 1 });
+                let my = 470;
+                const lines = wrapText(mensaje, 32);
+                lines.forEach(l => {
+                    page.drawText(l, { x: 45, y: my, size: 13.5, font: fontOblique, color: rgb(0.9, 0.92, 0.96) });
+                    my -= 26;
+                });
+
+                // Signature / Author Line
+                page.drawText(`- ${autor}`, { x: 45, y: my - 10, size: 12, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+
+                // Footer
+                page.drawText(`${web}  |  ${contacto}`, { x: 30, y: 80, size: 9.5, font: fontReg, color: rgb(0.7, 0.75, 0.85) });
+                page.drawText(hashtag, { x: 30, y: 55, size: 8.5, font: fontOblique, color: rgb(0.4, 0.5, 0.6) });
+
+            } else {
+                // Style 10: Tech IDE Developer Code Theme
+                page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(0.02, 0.08, 0.16) });
+
+                // Window Header Bar
+                page.drawRectangle({ x: 15, y: H - 45, width: W - 30, height: 30, color: rgb(0.08, 0.14, 0.25) });
+                page.drawCircle({ x: 30, y: H - 30, size: 4, color: rgb(0.93, 0.35, 0.35) });
+                page.drawCircle({ x: 44, y: H - 30, size: 4, color: rgb(0.93, 0.73, 0.35) });
+                page.drawCircle({ x: 58, y: H - 30, size: 4, color: rgb(0.35, 0.78, 0.45) });
+
+                page.drawText('status_2026.js - ESTADO TECH (10/10)', { x: 80, y: H - 34, size: 8.5, font: fontBold, color: rgb(0.8, 0.85, 0.95) });
+
+                // Window Content Body
+                page.drawRectangle({ x: 15, y: 25, width: W - 30, height: H - 75, color: rgb(0.05, 0.1, 0.2), borderWidth: 1, borderColor: rgb(0.15, 0.25, 0.4) });
+
+                // Code/Terminal Header
+                page.drawText('// TITLE & SUBTITLE', { x: 30, y: H - 80, size: 9, font: fontOblique, color: rgb(0.4, 0.5, 0.6) });
+                page.drawText(`const title = "${titulo}";`, { x: 30, y: H - 102, size: 12, font: fontBold, color: rgb(0.2, 0.8, 0.4) });
+                page.drawText(`const subtitle = "${subtitulo}";`, { x: 30, y: H - 122, size: 10.5, font: fontBold, color: rgb(0.23, 0.7, 0.96) });
+
+                page.drawLine({ start: { x: 30, y: H - 140 }, end: { x: W - 30, y: H - 140 }, thickness: 1, color: rgb(0.15, 0.25, 0.4) });
+
+                // Code Message Body
+                page.drawText('// MESSAGE CONTENT', { x: 30, y: H - 162, size: 9, font: fontOblique, color: rgb(0.4, 0.5, 0.6) });
+                let my = H - 188;
+                const lines = wrapText(mensaje, 32);
+                lines.forEach(l => {
+                    page.drawText(l, { x: 30, y: my, size: 12, font: fontReg, color: rgb(0.9, 0.95, 1) });
+                    my -= 24;
+                });
+
+                // Developer Specs Box at Bottom
+                page.drawRectangle({ x: 25, y: 40, width: W - 50, height: 110, color: rgb(0.02, 0.06, 0.12), borderColor: rgb(0.23, 0.7, 0.96), borderWidth: 1 });
+                page.drawText(`developer: "${autor}"`, { x: 38, y: 125, size: 10, font: fontBold, color: rgb(0.2, 0.8, 0.4) });
+                page.drawText(`website: "${web}"`, { x: 38, y: 105, size: 9.5, font: fontReg, color: rgb(0.23, 0.7, 0.96) });
+                page.drawText(`phone: "${contacto}"`, { x: 38, y: 85, size: 9.5, font: fontReg, color: rgb(0.85, 0.85, 0.95) });
+                page.drawText(`tags: "${hashtag}"`, { x: 38, y: 62, size: 8.5, font: fontOblique, color: rgb(0.6, 0.5, 0.8) });
+            }
+
+            const bytes = await doc.save();
+            await this.loadPDFBytes(bytes, 'estado_whatsapp.pdf');
+            showToast(`Estado de WhatsApp generado con éxito (Estilo ${estilo} de 10).`, 'success');
+        } catch (err) {
+            console.error('Error al generar estado de whatsapp:', err);
+            showToast('Error al generar el estado de WhatsApp.', 'danger');
+        }
+    }
+
     initMarkdownModal() {
         const modal = document.getElementById('markdown-modal');
         const openHeaderBtn = document.getElementById('btn-open-markdown-modal');
@@ -3110,6 +3470,9 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
             return;
         } else if (templateType === 'money-receipt') {
             await this.createMoneyReceiptTemplate(mdText);
+            return;
+        } else if (templateType === 'whatsapp-status') {
+            await this.createWhatsAppStatusTemplate(mdText);
             return;
         }
 
