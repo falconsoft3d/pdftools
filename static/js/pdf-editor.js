@@ -1466,6 +1466,49 @@ AUTOR: Marlon Falcón
 SITIO_WEB: www.marlonfalcon.com
 CONTACTO: +34 600 000 000
 HASHTAG: #SoftwareDev #Tech2026 #PDFTools`;
+        } else if (type === 'todo-list') {
+            return `# LISTA DE TAREAS / TODO LIST
+TITULO: OBJETIVOS Y TAREAS PENDIENTES 2026
+FECHA: 06 / 09 / 2026
+CATEGORIA: PROYECTO & PRODUCTIVIDAD
+
+## TAREAS PRIORITARIAS
+- [X] Definir arquitectura y requerimientos funcionales
+- [X] Crear módulo de exportación PDF local
+- [ ] Implementar plantillas editables con Markdown
+- [ ] Realizar pruebas de rendimiento e integración
+- [ ] Configurar servidor Nginx y despliegue Docker
+
+## TAREAS SECUNDARIAS
+- [X] Revisar diseño visual y contraste de colores
+- [ ] Optimizar almacenamiento en localStorage
+- [ ] Redactar documentación y guía de usuario
+
+NOTAS: Priorizar el desarrollo local sin dependencias externas en la nube.`;
+        } else if (type === 'resume-cv') {
+            return `# CURRICULUM VITAE
+NOMBRE: MARLON FALCON HERNANDEZ
+TITULO_PROFESIONAL: Desarrollador Senior / Consultor de Software
+EMAIL: contacto@marlonfalcon.com
+TELEFONO: +34 600 000 000
+UBICACION: Madrid, España
+SITIO_WEB: www.marlonfalcon.com
+
+## PERFIL PROFESIONAL
+Ingeniero y desarrollador de software apasionado por la creación de soluciones digitales eficientes, escalables y 100% locales. Más de 10 años de experiencia liderando proyectos web.
+
+## EXPERIENCIA LABORAL
+- 2022 - Presente | Lead Software Engineer @ Tech Solutions | Desarrollo de aplicaciones web, arquitectura de sistemas y optimización de rendimiento.
+- 2018 - 2022 | Senior Fullstack Developer @ Global Systems | Implementación de APIs REST, bases de datos SQL/NoSQL y frontends interactivos.
+
+## EDUCACION & CERTIFICACIONES
+- Graduado en Ingeniería Informática | Universidad Politécnica (2014 - 2018)
+- Certificación Profesional en Arquitectura Cloud & DevOps (2020)
+
+## HABILIDADES
+- Lenguajes: Python, JavaScript, TypeScript, HTML5, CSS3, SQL
+- Herramientas: Flask, Node.js, Docker, Git, Linux, Nginx
+- Idiomas: Español (Nativo), Inglés (Avanzado C1)`;
         } else {
             return this.getDefaultMarkdownSample();
         }
@@ -3201,6 +3244,282 @@ HASHTAG: #SoftwareDev #Tech2026 #PDFTools`;
         }
     }
 
+    async createTodoListTemplate(mdText) {
+        showToast('Generando Lista de Tareas / TODO List...', 'info');
+        try {
+            const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            const page = doc.addPage([595.28, 841.89]); // A4 Portrait
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+            const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+
+            const W = 595.28;
+            const H = 841.89;
+
+            const titulo = this.getMdVal(mdText, 'TITULO|HEADER', 'MIS OBJETIVOS Y TAREAS PENDIENTES');
+            const fecha = this.getMdVal(mdText, 'FECHA', new Date().toLocaleDateString('es-ES'));
+            const categoria = this.getMdVal(mdText, 'CATEGORIA|PROYECTO', 'PROYECTO & PRODUCTIVIDAD');
+            const notas = this.getMdVal(mdText, 'NOTAS|NOTA', '');
+
+            // Top Header Bar
+            page.drawRectangle({
+                x: 35,
+                y: H - 95,
+                width: W - 70,
+                height: 65,
+                color: rgb(0.08, 0.12, 0.22)
+            });
+
+            page.drawText('LISTA DE TAREAS / TODO LIST', {
+                x: 50,
+                y: H - 52,
+                size: 10,
+                font: fontBold,
+                color: rgb(0.23, 0.51, 0.96)
+            });
+
+            page.drawText(titulo, {
+                x: 50,
+                y: H - 75,
+                size: 14,
+                font: fontBold,
+                color: rgb(1, 1, 1)
+            });
+
+            page.drawText(`FECHA: ${fecha}`, { x: W - 180, y: H - 52, size: 9, font: fontReg, color: rgb(0.8, 0.85, 0.95) });
+            page.drawText(`CAT: ${categoria}`, { x: W - 180, y: H - 72, size: 8.5, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+
+            let currY = H - 120;
+
+            // Parse Sections & Checklist Items
+            if (mdText) {
+                const lines = mdText.split('\n').map(l => l.trim());
+                lines.forEach(line => {
+                    if (currY < 120) return;
+
+                    if (line.startsWith('## ')) {
+                        const secTitle = line.replace(/^##\s+/, '').toUpperCase();
+                        currY -= 15;
+                        page.drawRectangle({
+                            x: 35,
+                            y: currY - 5,
+                            width: W - 70,
+                            height: 24,
+                            color: rgb(0.93, 0.95, 0.98),
+                            borderColor: rgb(0.82, 0.86, 0.92),
+                            borderWidth: 1
+                        });
+                        page.drawText(secTitle, { x: 45, y: currY + 2, size: 10.5, font: fontBold, color: rgb(0.09, 0.14, 0.24) });
+                        currY -= 32;
+                    } else if (line.startsWith('- ') || line.startsWith('* ')) {
+                        const itemText = line.replace(/^[-*]\s+/, '').trim();
+                        const isChecked = /^\[x\]/i.test(itemText);
+                        const cleanText = itemText.replace(/^\[[ xX]\]\s*/i, '');
+
+                        // Draw Checkbox Square
+                        page.drawRectangle({
+                            x: 45,
+                            y: currY - 2,
+                            width: 14,
+                            height: 14,
+                            borderWidth: 1.5,
+                            borderColor: isChecked ? rgb(0.05, 0.65, 0.41) : rgb(0.5, 0.55, 0.65),
+                            color: isChecked ? rgb(0.92, 0.98, 0.94) : rgb(1, 1, 1)
+                        });
+
+                        if (isChecked) {
+                            page.drawText('X', { x: 48, y: currY + 1, size: 10, font: fontBold, color: rgb(0.05, 0.65, 0.41) });
+                        }
+
+                        // Draw Item Text
+                        page.drawText(cleanText, {
+                            x: 68,
+                            y: currY + 1,
+                            size: 10.5,
+                            font: fontReg,
+                            color: isChecked ? rgb(0.45, 0.5, 0.55) : rgb(0.15, 0.2, 0.3)
+                        });
+
+                        // Dotted underline
+                        page.drawLine({
+                            start: { x: 68, y: currY - 5 },
+                            end: { x: W - 35, y: currY - 5 },
+                            thickness: 0.5,
+                            color: rgb(0.88, 0.9, 0.94)
+                        });
+
+                        currY -= 26;
+                    }
+                });
+            }
+
+            // Notes Box at Bottom
+            if (notas) {
+                const notesY = Math.max(50, currY - 20);
+                page.drawRectangle({
+                    x: 35,
+                    y: 40,
+                    width: W - 70,
+                    height: Math.min(100, notesY - 30),
+                    borderWidth: 1.5,
+                    borderColor: rgb(0.23, 0.51, 0.96),
+                    color: rgb(0.97, 0.98, 1)
+                });
+                page.drawText('NOTAS & OBSERVACIONES:', { x: 48, y: Math.min(125, notesY - 10), size: 10, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+                page.drawText(notas, { x: 48, y: Math.min(100, notesY - 30), size: 9.5, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+            }
+
+            const bytes = await doc.save();
+            await this.loadPDFBytes(bytes, 'lista_tareas_todo.pdf');
+            showToast('Lista de Tareas / TODO List lista para imprimir o completar.', 'success');
+        } catch (err) {
+            console.error('Error al generar lista de tareas:', err);
+            showToast('Error al generar la lista de tareas.', 'danger');
+        }
+    }
+
+    async createResumeCvTemplate(mdText) {
+        showToast('Generando Currículum Vitae (CV)...', 'info');
+        try {
+            const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            const page = doc.addPage([595.28, 841.89]); // A4 Portrait
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+            const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+            const fontOblique = await doc.embedFont(StandardFonts.HelveticaOblique);
+
+            const W = 595.28;
+            const H = 841.89;
+
+            const nombre = this.getMdVal(mdText, 'NOMBRE', 'MARLON FALCON HERNANDEZ');
+            const tituloProf = this.getMdVal(mdText, 'TITULO_PROFESIONAL|TITULO', 'Desarrollador Senior / Consultor de Software');
+            const email = this.getMdVal(mdText, 'EMAIL', 'contacto@marlonfalcon.com');
+            const tel = this.getMdVal(mdText, 'TELEFONO|TEL', '+34 600 000 000');
+            const ubi = this.getMdVal(mdText, 'UBICACION', 'Madrid, España');
+            const web = this.getMdVal(mdText, 'SITIO_WEB|WEB', 'www.marlonfalcon.com');
+
+            // Header Banner
+            page.drawRectangle({
+                x: 0,
+                y: H - 110,
+                width: W,
+                height: 110,
+                color: rgb(0.08, 0.12, 0.22)
+            });
+
+            // Accent Left Bar
+            page.drawRectangle({
+                x: 0,
+                y: H - 110,
+                width: 10,
+                height: 110,
+                color: rgb(0.23, 0.51, 0.96)
+            });
+
+            page.drawText(nombre, {
+                x: 35,
+                y: H - 50,
+                size: 20,
+                font: fontBold,
+                color: rgb(1, 1, 1)
+            });
+
+            page.drawText(tituloProf, {
+                x: 35,
+                y: H - 72,
+                size: 12,
+                font: fontBold,
+                color: rgb(0.23, 0.51, 0.96)
+            });
+
+            page.drawText(`${email}  |  ${tel}  |  ${ubi}  |  ${web}`, {
+                x: 35,
+                y: H - 95,
+                size: 9,
+                font: fontReg,
+                color: rgb(0.8, 0.85, 0.95)
+            });
+
+            let currY = H - 140;
+
+            const wrapText = (text, maxChars = 82) => {
+                if (!text || text.length <= maxChars) return [text];
+                const words = text.split(' ');
+                const lines = [];
+                let currentLine = '';
+                for (const word of words) {
+                    if ((currentLine + ' ' + word).trim().length <= maxChars) {
+                        currentLine = (currentLine + ' ' + word).trim();
+                    } else {
+                        if (currentLine) lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                if (currentLine) lines.push(currentLine);
+                return lines;
+            };
+
+            // Parse Markdown Sections
+            if (mdText) {
+                const lines = mdText.split('\n').map(l => l.trim());
+                lines.forEach(line => {
+                    if (currY < 50) return;
+
+                    if (line.startsWith('## ')) {
+                        const secTitle = line.replace(/^##\s+/, '').toUpperCase();
+                        currY -= 10;
+
+                        // Section Title Header
+                        page.drawText(secTitle, {
+                            x: 35,
+                            y: currY,
+                            size: 12,
+                            font: fontBold,
+                            color: rgb(0.23, 0.51, 0.96)
+                        });
+
+                        page.drawLine({
+                            start: { x: 35, y: currY - 4 },
+                            end: { x: W - 35, y: currY - 4 },
+                            thickness: 1.2,
+                            color: rgb(0.23, 0.51, 0.96)
+                        });
+
+                        currY -= 22;
+                    } else if (line.startsWith('- ') || line.startsWith('* ')) {
+                        const itemText = line.replace(/^[-*]\s+/, '').trim();
+                        const wrapped = wrapText(itemText, 80);
+
+                        wrapped.forEach((wLine, idx) => {
+                            if (idx === 0) {
+                                page.drawText('•', { x: 45, y: currY, size: 10, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+                                page.drawText(wLine, { x: 58, y: currY, size: 10, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                            } else {
+                                page.drawText(wLine, { x: 58, y: currY, size: 10, font: fontReg, color: rgb(0.2, 0.25, 0.35) });
+                            }
+                            currY -= 16;
+                        });
+                        currY -= 4;
+                    } else if (line.length > 0 && !line.startsWith('#') && !/^[A-Z_]+:/i.test(line)) {
+                        const wrapped = wrapText(line, 86);
+                        wrapped.forEach(wLine => {
+                            page.drawText(wLine, { x: 35, y: currY, size: 10, font: fontReg, color: rgb(0.3, 0.35, 0.45) });
+                            currY -= 16;
+                        });
+                        currY -= 4;
+                    }
+                });
+            }
+
+            const bytes = await doc.save();
+            await this.loadPDFBytes(bytes, 'curriculum_vitae.pdf');
+            showToast('Currículum Vitae (CV) generado correctamente.', 'success');
+        } catch (err) {
+            console.error('Error al generar CV:', err);
+            showToast('Error al generar el Currículum Vitae.', 'danger');
+        }
+    }
+
     initMarkdownModal() {
         const modal = document.getElementById('markdown-modal');
         const openHeaderBtn = document.getElementById('btn-open-markdown-modal');
@@ -3473,6 +3792,12 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
             return;
         } else if (templateType === 'whatsapp-status') {
             await this.createWhatsAppStatusTemplate(mdText);
+            return;
+        } else if (templateType === 'todo-list') {
+            await this.createTodoListTemplate(mdText);
+            return;
+        } else if (templateType === 'resume-cv') {
+            await this.createResumeCvTemplate(mdText);
             return;
         }
 
