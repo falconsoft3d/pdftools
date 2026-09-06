@@ -305,13 +305,28 @@
                                 <button id="btn-close-md-side-panel" class="btn btn-secondary btn-icon btn-xs" title="Cerrar Panel Markdown"><i class="fas fa-times"></i></button>
                             </div>
                         </div>
+                        <div style="margin-bottom: 0.5rem;">
+                            <select id="side-md-template-select" class="form-input" style="font-size: 0.8rem; padding: 0.3rem 0.5rem;" title="Cambiar tipo de plantilla Markdown">
+                                <option value="presentation">📄 Presentación (Diapositivas)</option>
+                                <option value="invoice">🧾 A - Factura Comercial</option>
+                                <option value="diploma">📜 B - Diploma de Curso</option>
+                                <option value="sale">📢 C - Cartel "SE VENDE"</option>
+                                <option value="business-cards">📇 D - Tarjetas de Presentación (Repetido x8)</option>
+                                <option value="book-labels">🏷️ E - Etiquetas para Libros (Repetido x6)</option>
+                                <option value="qr-poster">📱 F - Cartel con Código QR</option>
+                                <option value="mobile-wireframe">📲 G - Prototipo App Móvil</option>
+                                <option value="desktop-wireframe">💻 H - Prototipo App Desktop</option>
+                                <option value="job-offer">💼 I - Oferta de Empleo</option>
+                                <option value="money-receipt">💵 K - Comprobante de Recepción de Dinero</option>
+                            </select>
+                        </div>
                         <input type="file" id="side-md-file-input" accept=".md,.markdown,.txt" style="display: none;">
-                        <textarea id="md-side-textarea" class="form-input" style="flex: 1; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.82rem; line-height: 1.4; resize: none; margin-bottom: 0.5rem; background: #020617; border: 1px solid var(--border-color); color: var(--text-main);" placeholder="Escribe tu presentación en Markdown..."></textarea>
+                        <textarea id="md-side-textarea" class="form-input" style="flex: 1; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.82rem; line-height: 1.4; resize: none; margin-bottom: 0.5rem; background: #020617; border: 1px solid var(--border-color); color: var(--text-main);" placeholder="Escribe o edita en Markdown..."></textarea>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
                             <button id="btn-update-from-side-md" class="btn btn-primary btn-sm" style="flex: 1;"><i class="fas fa-sync-alt"></i> Actualizar PDF (Ctrl+Enter)</button>
                         </div>
                         <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.4rem; text-align: center;">
-                            Usa <code>---</code> para separar diapositivas.
+                            Edita las variables en Markdown para regenerar el documento PDF.
                         </div>
                     </div>
 
@@ -476,20 +491,33 @@
         </div>
     </div>
 
-    <!-- Modal for Markdown Presentation (.md) -->
+    <!-- Modal for Markdown Presentation & Templates (.md) -->
     <div class="modal-backdrop" id="markdown-modal">
         <div class="modal-card" style="max-width: 800px;">
             <div class="modal-header">
-                <h3 style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-file-powerpoint" style="color: var(--accent-primary);"></i> Editar Presentación con Markdown (.md)</h3>
+                <h3 style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-file-code" style="color: var(--accent-primary);"></i> Crear / Editar Plantillas con Markdown (.md)</h3>
                 <button class="btn btn-secondary btn-icon btn-sm" id="btn-close-markdown-modal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; flex: 1; min-width: 250px;">
-                        Escribe o carga un archivo <strong>.md</strong>. Separa las diapositivas con tres guiones (<code>---</code>).
-                    </p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 280px;">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Plantilla:</span>
+                        <select id="modal-md-template-select" class="form-input" style="font-size: 0.82rem; padding: 0.3rem 0.5rem; width: auto;" title="Elegir tipo de plantilla">
+                            <option value="presentation">📄 Presentación (Diapositivas)</option>
+                            <option value="invoice">🧾 A - Factura Comercial</option>
+                            <option value="diploma">📜 B - Diploma de Curso</option>
+                            <option value="sale">📢 C - Cartel "SE VENDE"</option>
+                            <option value="business-cards">📇 D - Tarjetas de Presentación (Repetido x8)</option>
+                            <option value="book-labels">🏷️ E - Etiquetas para Libros (Repetido x6)</option>
+                            <option value="qr-poster">📱 F - Cartel con Código QR</option>
+                            <option value="mobile-wireframe">📲 G - Prototipo App Móvil</option>
+                            <option value="desktop-wireframe">💻 H - Prototipo App Desktop</option>
+                            <option value="job-offer">💼 I - Oferta de Empleo</option>
+                            <option value="money-receipt">💵 K - Comprobante de Recepción de Dinero</option>
+                        </select>
+                    </div>
                     <div style="display: flex; gap: 0.5rem;">
                         <input type="file" id="md-file-input" accept=".md,.markdown,.txt" style="display: none;">
                         <button id="btn-upload-md-file" class="btn btn-secondary btn-sm" title="Subir archivo .md desde tu equipo">
@@ -505,15 +533,15 @@
 
                 <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
                     <span><i class="fas fa-heading" style="color: var(--accent-primary);"></i> <code># Título</code> / <code>## Subtítulo</code></span>
-                    <span><i class="fas fa-list" style="color: var(--accent-primary);"></i> <code>- Elemento de lista</code></span>
-                    <span><i class="fas fa-quote-left" style="color: var(--accent-primary);"></i> <code>> Cita o frase</code></span>
+                    <span><i class="fas fa-key" style="color: var(--accent-primary);"></i> <code>CAMPO: Valor</code></span>
+                    <span><i class="fas fa-list" style="color: var(--accent-primary);"></i> <code>- Elemento</code></span>
                     <span><i class="fas fa-columns" style="color: var(--accent-primary);"></i> <code>---</code> Separa diapositivas</span>
                 </div>
             </div>
             <div class="modal-footer">
                 <button id="btn-cancel-markdown-modal" class="btn btn-secondary">Cancelar</button>
                 <button id="btn-generate-markdown-pdf" class="btn btn-primary">
-                    <i class="fas fa-file-powerpoint"></i> Generar Presentación PDF
+                    <i class="fas fa-file-pdf"></i> Generar PDF desde Markdown
                 </button>
             </div>
         </div>

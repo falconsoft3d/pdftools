@@ -1315,31 +1315,28 @@ class PDFEditor {
     }
 
     async createFromTemplate(type) {
-        if (type === 'invoice') {
-            await this.createInvoiceTemplate();
-        } else if (type === 'diploma') {
-            await this.createDiplomaTemplate();
-        } else if (type === 'sale') {
-            await this.createSaleSignTemplate();
-        } else if (type === 'business-cards') {
-            await this.createBusinessCardsTemplate();
-        } else if (type === 'book-labels') {
-            await this.createBookLabelsTemplate();
-        } else if (type === 'qr-poster') {
-            await this.createQrPosterTemplate();
-        } else if (type === 'mobile-wireframe') {
-            await this.createMobileWireframeTemplate();
-        } else if (type === 'desktop-wireframe') {
-            await this.createDesktopWireframeTemplate();
-        } else if (type === 'job-offer') {
-            await this.createJobOfferTemplate();
-        } else if (type === 'money-receipt') {
-            await this.createMoneyReceiptTemplate();
-        } else if (type === 'presentation' || type === 'presentation-4pages') {
-            await this.createPresentationTemplate();
-        } else {
+        if (!type || type === 'blank') {
             await this.createNewBlankPDF();
+            return;
         }
+
+        this.currentTemplateType = type;
+        const mdText = this.getMarkdownSampleForType(type);
+        this.currentMarkdownText = mdText;
+        localStorage.setItem('saved_presentation_md', mdText);
+
+        // Sync dropdown selectors and textareas
+        const modalSelect = document.getElementById('modal-md-template-select');
+        if (modalSelect) modalSelect.value = type;
+        const sideSelect = document.getElementById('side-md-template-select');
+        if (sideSelect) sideSelect.value = type;
+
+        const modalTextarea = document.getElementById('md-editor-textarea');
+        if (modalTextarea) modalTextarea.value = mdText;
+        const sideTextarea = document.getElementById('md-side-textarea');
+        if (sideTextarea) sideTextarea.value = mdText;
+
+        await this.createPDFFromMarkdown(mdText, type);
     }
 
     async createNewBlankPDF() {
@@ -1357,7 +1354,114 @@ class PDFEditor {
         }
     }
 
-    async createInvoiceTemplate() {
+    getMdVal(mdText, keyPattern, defaultVal = '') {
+        if (!mdText) return defaultVal;
+        const regex = new RegExp(`^(?:${keyPattern})\\s*:\\s*(.*)$`, 'im');
+        const match = mdText.match(regex);
+        if (match && match[1].trim()) {
+            return match[1].trim().replace(/\\n/g, '\n');
+        }
+        return defaultVal;
+    }
+
+    getMarkdownSampleForType(type) {
+        if (type === 'invoice') {
+            return `# FACTURA
+EMISOR: Empresa Ejemplo S.L.\\nNIF: B-12345678\\nCalle Mayor 100, Madrid
+CLIENTE: Cliente Ejemplo S.A.\\nNIF: A-87654321\\nAv. Diagonal 45, Barcelona
+NUMERO: FAC-2026-001
+FECHA: 06 / 09 / 2026
+
+## CONCEPTOS
+| Concepto | Cantidad | Precio | Total |
+| Desarrollo Web Application | 1 | 800.00 | 800.00 |
+| Diseño UI/UX y Consultoría | 1 | 350.00 | 350.00 |
+
+SUBTOTAL: 1150.00 EUR
+IVA: 241.50 EUR
+TOTAL: 1391.50 EUR
+PAGO: Transferencia Bancaria IBAN: ES12 3456 7890 1234 5678`;
+        } else if (type === 'diploma') {
+            return `# DIPLOMA DE ACREDITACION
+OTORGADO_A: Juan Pérez Gómez
+CURSO: CURSO DE ESPECIALIZACION EN DESARROLLO WEB Y PDF TOOLS
+FECHA: Expedido a 06 de Septiembre de 2026
+INSTRUCTOR: Marlon Falcón Hernández
+DIRECTOR: Dirección Académica`;
+        } else if (type === 'sale') {
+            return `# SE VENDE
+TITULO: PISO LUMINOSO EN EL CENTRO
+DESCRIPCION: Excelente oportunidad de compra en zona residencial tranquila.
+PRECIO: 250.000 EUR
+TELEFONO: 600 000 000
+
+## CARACTERISTICAS
+- Estado excelente / Seminuevo
+- 3 Habitaciones, 2 Baños, Terraza y Garaje
+- Incluye todos los accesorios y documentación
+- Precio negociable / Oportunidad única`;
+        } else if (type === 'business-cards') {
+            return `# TARJETA DE PRESENTACION
+NOMBRE: MARLON FALCON
+CARGO: Consultor & Desarrollador Software
+EMPRESA: Falcón Solutions
+TELEFONO: Tel: +34 600 000 000
+EMAIL: Email: contacto@marlonfalcon.com
+WEB: Web: www.marlonfalcon.com
+DIRECCION: Dirección: Calle Ejemplo 123, Madrid`;
+        } else if (type === 'book-labels') {
+            return `# ETIQUETA ESCOLAR
+NOMBRE: Alejandro Falcón
+ASIGNATURA: Matemáticas / Ciencias
+CURSO: 4º Educación Primaria
+COLEGIO: Colegio San José`;
+        } else if (type === 'qr-poster') {
+            return `# ESCANEE EL CODIGO QR
+SUBTITULO: Accede de forma rápida desde tu teléfono móvil
+URL_QR: https://www.marlonfalcon.com
+INFORMACION: Abre la cámara de tu móvil y apunta hacia el código QR para abrir directamente la página web o catálogo.
+UBICACION: Ubicación: Calle Principal 100 | Horario: 09:00 - 20:00 h`;
+        } else if (type === 'mobile-wireframe') {
+            return `# PROTOTIPO APP MOVIL
+TITULO_APP: PROTOTIPO Y WIREFRAME DE APP MOVIL
+PANTALLA_1: 1. Pantalla Login / Home
+PANTALLA_2: 2. Pantalla Principal
+PANTALLA_3: 3. Detalle / Perfil`;
+        } else if (type === 'desktop-wireframe') {
+            return `# PROTOTIPO APP DESKTOP
+TITULO_VENTANA: https://mi-aplicacion-desktop.com/dashboard
+NOMBRE_APP: MI APP DESKTOP
+MENUS: Dashboard, Proyectos, Analítica, Usuarios, Ajustes
+PANEL: PANEL PRINCIPAL DE TRABAJO`;
+        } else if (type === 'job-offer') {
+            return `# OFERTA DE EMPLEO
+PUESTO: DESARROLLADOR / CONSULTOR SOFTWARE SENIOR
+EMPRESA: Falcon Tech Solutions
+UBICACION: Madrid, España / Híbrido
+JORNADA: Tiempo Completo (40h/semana)
+SALARIO: 35.000 EUR - 45.000 EUR Brutos / Año
+
+## REQUISITOS
+- Experiencia mínima de 3-5 años en desarrollo web.
+- Dominio de Python, JavaScript, HTML5 y CSS3.
+- Capacidad de trabajo en equipo y proactividad.
+
+CONTACTO: Email: rrhh@empresa.com | Web: www.marlonfalcon.com`;
+        } else if (type === 'money-receipt') {
+            return `# COMPROBANTE DE RECEPCION DE DINERO
+NUMERO: REC-2026-001
+FECHA: 06/09/2026
+PAGADOR: Nombre / Razón Social del cliente que entrega dinero
+COBRADOR: Marlon Falcón Hernández / Empresa que recibe
+IMPORTE: 500.00 EUR
+CONCEPTO: Pago por concepto de servicios prestados / anticipo
+FORMA_PAGO: [X] Efectivo   [ ] Transferencia Bancaria   [ ] Tarjeta`;
+        } else {
+            return this.getDefaultMarkdownSample();
+        }
+    }
+
+    async createInvoiceTemplate(mdText) {
         showToast('Generando plantilla de Factura...', 'info');
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
@@ -1368,6 +1472,15 @@ class PDFEditor {
 
             const W = 595.28;
             const H = 841.89;
+
+            const emisor = this.getMdVal(mdText, 'EMISOR', 'Empresa Ejemplo S.L.\nNIF: B-12345678\nCalle Mayor, 100, Madrid');
+            const cliente = this.getMdVal(mdText, 'CLIENTE', 'Cliente Ejemplo S.A.\nNIF: A-87654321\nAv. Diagonal 45, Barcelona');
+            const numero = this.getMdVal(mdText, 'NUMERO|N. FACTURA|FACTURA', 'FAC-2026-001');
+            const fecha = this.getMdVal(mdText, 'FECHA', '06 / 09 / 2026');
+            const subtotal = this.getMdVal(mdText, 'SUBTOTAL', '1150.00 EUR');
+            const iva = this.getMdVal(mdText, 'IVA', '241.50 EUR');
+            const total = this.getMdVal(mdText, 'TOTAL', '1391.50 EUR');
+            const pago = this.getMdVal(mdText, 'PAGO|FORMA DE PAGO', 'Transferencia Bancaria IBAN: ES12 3456 7890 1234 5678');
 
             // Header bar
             page.drawRectangle({
@@ -1386,12 +1499,12 @@ class PDFEditor {
                 color: rgb(0.23, 0.51, 0.96)
             });
 
-            page.drawText('N. FACTURA: FAC-2026-001', { x: W - 220, y: H - 38, size: 10, font: fontBold, color: rgb(1, 1, 1) });
-            page.drawText('FECHA: 06 / 09 / 2026', { x: W - 220, y: H - 54, size: 10, font: fontReg, color: rgb(0.8, 0.8, 0.8) });
+            page.drawText(`N. FACTURA: ${numero}`, { x: W - 220, y: H - 38, size: 10, font: fontBold, color: rgb(1, 1, 1) });
+            page.drawText(`FECHA: ${fecha}`, { x: W - 220, y: H - 54, size: 10, font: fontReg, color: rgb(0.8, 0.8, 0.8) });
 
             // Issuer Box
             page.drawText('DATOS DEL EMISOR', { x: 35, y: H - 110, size: 10, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
-            page.drawText('Empresa Ejemplo S.L.\nNIF: B-12345678\nCalle Mayor, 100, Madrid\ncontacto@empresa.com', {
+            page.drawText(emisor, {
                 x: 35,
                 y: H - 128,
                 size: 9,
@@ -1402,7 +1515,7 @@ class PDFEditor {
 
             // Client Box
             page.drawText('DATOS DEL CLIENTE', { x: 320, y: H - 110, size: 10, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
-            page.drawText('Cliente / Razon Social\nNIF / CIF: _____________\nDireccion Cliente\nCiudad / Codigo Postal', {
+            page.drawText(cliente, {
                 x: 320,
                 y: H - 128,
                 size: 9,
@@ -1434,30 +1547,56 @@ class PDFEditor {
             page.drawText('PRECIO', { x: 410, y: tableY + 2, size: 9, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
             page.drawText('TOTAL', { x: 490, y: tableY + 2, size: 9, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
 
+            // Parse Table Rows from Markdown if present
+            const mdItems = [];
+            if (mdText) {
+                const lines = mdText.split('\n');
+                lines.forEach(line => {
+                    if (line.includes('|') && !line.includes('---') && !line.toLowerCase().includes('concepto')) {
+                        const parts = line.split('|').map(p => p.trim()).filter(p => p.length > 0);
+                        if (parts.length >= 1) {
+                            mdItems.push({
+                                desc: parts[0] || 'Concepto',
+                                cant: parts[1] || '1',
+                                precio: parts[2] || '0.00',
+                                total: parts[3] || '0.00'
+                            });
+                        }
+                    }
+                });
+            }
+
             // Table Rows
             let rowY = tableY - 30;
-            for (let i = 0; i < 7; i++) {
+            const maxRows = Math.max(5, mdItems.length || 2);
+            for (let i = 0; i < maxRows; i++) {
+                if (mdItems[i]) {
+                    page.drawText(mdItems[i].desc, { x: 45, y: rowY, size: 9, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
+                    page.drawText(mdItems[i].cant, { x: 345, y: rowY, size: 9, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
+                    page.drawText(mdItems[i].precio, { x: 410, y: rowY, size: 9, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
+                    page.drawText(mdItems[i].total, { x: 490, y: rowY, size: 9, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
+                }
                 page.drawLine({
                     start: { x: 35, y: rowY - 5 },
                     end: { x: W - 35, y: rowY - 5 },
                     thickness: 0.5,
                     color: rgb(0.88, 0.88, 0.88)
                 });
-                rowY -= 35;
+                rowY -= 32;
             }
 
             // Vertical Table Lines
-            page.drawLine({ start: { x: 325, y: tableY + 19 }, end: { x: 325, y: rowY + 30 }, thickness: 0.5, color: rgb(0.88, 0.88, 0.88) });
-            page.drawLine({ start: { x: 395, y: tableY + 19 }, end: { x: 395, y: rowY + 30 }, thickness: 0.5, color: rgb(0.88, 0.88, 0.88) });
-            page.drawLine({ start: { x: 475, y: tableY + 19 }, end: { x: 475, y: rowY + 30 }, thickness: 0.5, color: rgb(0.88, 0.88, 0.88) });
+            page.drawLine({ start: { x: 325, y: tableY + 19 }, end: { x: 325, y: rowY + 27 }, thickness: 0.5, color: rgb(0.88, 0.88, 0.88) });
+            page.drawLine({ start: { x: 395, y: tableY + 19 }, end: { x: 395, y: rowY + 27 }, thickness: 0.5, color: rgb(0.88, 0.88, 0.88) });
+            page.drawLine({ start: { x: 475, y: tableY + 19 }, end: { x: 475, y: rowY + 27 }, thickness: 0.5, color: rgb(0.88, 0.88, 0.88) });
 
             // Totals
             const totalsY = rowY - 20;
             page.drawText('Subtotal:', { x: 380, y: totalsY, size: 10, font: fontReg, color: rgb(0.3, 0.3, 0.3) });
-            page.drawText('0.00 EUR', { x: 480, y: totalsY, size: 10, font: fontReg, color: rgb(0.3, 0.3, 0.3) });
+            page.drawText(subtotal, { x: 470, y: totalsY, size: 10, font: fontReg, color: rgb(0.3, 0.3, 0.3) });
 
-            page.drawText('IVA (21%):', { x: 380, y: totalsY - 20, size: 10, font: fontReg, color: rgb(0.3, 0.3, 0.3) });
-            page.drawText('0.00 EUR', { x: 480, y: totalsY - 20, size: 10, font: fontReg, color: rgb(0.3, 0.3, 0.3) });
+            page.drawText('IVA:', { x: 380, y: totalsY - 20, size: 10, font: fontReg, color: rgb(0.3, 0.3, 0.3) });
+            page.drawText(iva, { x: 470, y: totalsY - 20, size: 10, font: fontReg, color: rgb(0.3, 0.3, 0.3) });
 
             page.drawRectangle({
                 x: 360,
@@ -1467,10 +1606,10 @@ class PDFEditor {
                 color: rgb(0.23, 0.51, 0.96)
             });
             page.drawText('TOTAL FACTURA:', { x: 370, y: totalsY - 47, size: 10, font: fontBold, color: rgb(1, 1, 1) });
-            page.drawText('0.00 EUR', { x: 480, y: totalsY - 47, size: 10, font: fontBold, color: rgb(1, 1, 1) });
+            page.drawText(total, { x: 470, y: totalsY - 47, size: 10, font: fontBold, color: rgb(1, 1, 1) });
 
-            // Payment Notes & Signature area
-            page.drawText('FORMA DE PAGO: Transferencia Bancaria\nIBAN: ES00 0000 0000 0000 0000 0000\nBIC / SWIFT: XXXXES2X', {
+            // Payment Notes
+            page.drawText(`FORMA DE PAGO: ${pago}`, {
                 x: 35,
                 y: totalsY - 30,
                 size: 8,
@@ -1484,14 +1623,14 @@ class PDFEditor {
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'factura.pdf');
-            showToast('Plantilla de Factura cargada. ¡Ya puedes completarla!', 'success');
+            showToast('Plantilla de Factura actualizada desde Markdown.', 'success');
         } catch (err) {
             console.error('Error al generar plantilla de factura:', err);
             showToast('Error al generar plantilla de factura.', 'danger');
         }
     }
 
-    async createDiplomaTemplate() {
+    async createDiplomaTemplate(mdText) {
         showToast('Generando plantilla de Diploma...', 'info');
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
@@ -1502,6 +1641,13 @@ class PDFEditor {
 
             const W = 841.89;
             const H = 595.28;
+
+            const titulo = this.getMdVal(mdText, 'TITULO|DIPLOMA', 'DIPLOMA DE ACREDITACION');
+            const alumno = this.getMdVal(mdText, 'OTORGADO_A|OTORGADO A|ALUMNO|NOMBRE', 'NOMBRE Y APELLIDOS DEL ALUMNO');
+            const curso = this.getMdVal(mdText, 'POR_COMPLETAR|POR COMPLETAR|CURSO', 'CURSO DE ESPECIALIZACION PROFESIONAL');
+            const fecha = this.getMdVal(mdText, 'FECHA', 'Expedido a 06 de Septiembre de 2026');
+            const instructor = this.getMdVal(mdText, 'INSTRUCTOR', 'Firma del Instructor');
+            const director = this.getMdVal(mdText, 'DIRECTOR', 'Firma del Director / Centro');
 
             // Outer decorative border
             page.drawRectangle({
@@ -1525,8 +1671,8 @@ class PDFEditor {
             });
 
             // Title
-            page.drawText('DIPLOMA DE ACREDITACION', {
-                x: W / 2 - 190,
+            page.drawText(titulo, {
+                x: W / 2 - Math.min(220, titulo.length * 7),
                 y: H - 90,
                 size: 24,
                 font: fontBold,
@@ -1542,8 +1688,8 @@ class PDFEditor {
             });
 
             // Recipient Name
-            page.drawText('NOMBRE Y APELLIDOS DEL ALUMNO', {
-                x: W / 2 - 180,
+            page.drawText(alumno, {
+                x: W / 2 - Math.min(240, alumno.length * 6),
                 y: H - 200,
                 size: 20,
                 font: fontBold,
@@ -1567,15 +1713,15 @@ class PDFEditor {
             });
 
             // Course Name
-            page.drawText('CURSO DE ESPECIALIZACION PROFESIONAL', {
-                x: W / 2 - 220,
+            page.drawText(curso, {
+                x: W / 2 - Math.min(260, curso.length * 5),
                 y: H - 300,
-                size: 18,
+                size: 17,
                 font: fontBold,
                 color: rgb(0.12, 0.18, 0.28)
             });
 
-            page.drawText('Con una carga horaria de 40 horas lectivas y aprovechamiento satisfactorio.', {
+            page.drawText('Con aprovechamiento satisfactorio y cumplimiento de requisitos academicos.', {
                 x: W / 2 - 220,
                 y: H - 340,
                 size: 10,
@@ -1583,8 +1729,8 @@ class PDFEditor {
                 color: rgb(0.4, 0.4, 0.4)
             });
 
-            page.drawText('Expedido a 06 de Septiembre de 2026', {
-                x: W / 2 - 110,
+            page.drawText(fecha, {
+                x: W / 2 - Math.min(140, fecha.length * 3.5),
                 y: H - 380,
                 size: 10,
                 font: fontReg,
@@ -1593,21 +1739,21 @@ class PDFEditor {
 
             // Signatures at bottom
             page.drawLine({ start: { x: 180, y: 90 }, end: { x: 340, y: 90 }, thickness: 1, color: rgb(0.6, 0.6, 0.6) });
-            page.drawText('Firma del Instructor', { x: 210, y: 75, size: 9, font: fontReg, color: rgb(0.4, 0.4, 0.4) });
+            page.drawText(instructor, { x: 190, y: 75, size: 9, font: fontReg, color: rgb(0.4, 0.4, 0.4) });
 
             page.drawLine({ start: { x: W - 340, y: 90 }, end: { x: W - 180, y: 90 }, thickness: 1, color: rgb(0.6, 0.6, 0.6) });
-            page.drawText('Firma del Director / Centro', { x: W - 320, y: 75, size: 9, font: fontReg, color: rgb(0.4, 0.4, 0.4) });
+            page.drawText(director, { x: W - 330, y: 75, size: 9, font: fontReg, color: rgb(0.4, 0.4, 0.4) });
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'diploma.pdf');
-            showToast('Plantilla de Diploma cargada. ¡Puedes personalizarla y firmarla!', 'success');
+            showToast('Plantilla de Diploma actualizada desde Markdown.', 'success');
         } catch (err) {
             console.error('Error al generar plantilla de diploma:', err);
             showToast('Error al generar plantilla de diploma.', 'danger');
         }
     }
 
-    async createSaleSignTemplate() {
+    async createSaleSignTemplate(mdText) {
         showToast('Generando cartel SE VENDE...', 'info');
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
@@ -1618,6 +1764,11 @@ class PDFEditor {
 
             const W = 595.28;
             const H = 841.89;
+
+            const titulo = this.getMdVal(mdText, 'TITULO|ARTICULO', 'ARTICULO / PROPIEDAD / VEHICULO');
+            const desc = this.getMdVal(mdText, 'DESCRIPCION|DETALLES', 'Añade aquí el título o descripción principal del objeto en venta.');
+            const precio = this.getMdVal(mdText, 'PRECIO', '250.000 EUR');
+            const tel = this.getMdVal(mdText, 'TELEFONO|TEL', '600 000 000');
 
             // Top Banner Red
             page.drawRectangle({
@@ -1647,7 +1798,7 @@ class PDFEditor {
                 color: rgb(0.97, 0.97, 0.97)
             });
 
-            page.drawText('ARTICULO / PROPIEDAD / VEHICULO', {
+            page.drawText(titulo, {
                 x: 40,
                 y: H - 230,
                 size: 18,
@@ -1655,7 +1806,7 @@ class PDFEditor {
                 color: rgb(0.1, 0.1, 0.1)
             });
 
-            page.drawText('Anade aqui el titulo o descripcion principal del objeto en venta.', {
+            page.drawText(desc, {
                 x: 40,
                 y: H - 260,
                 size: 12,
@@ -1681,12 +1832,18 @@ class PDFEditor {
                 color: rgb(0.2, 0.2, 0.2)
             });
 
-            const features = [
+            let features = [
                 '* Estado excelente / Seminuevo',
-                '* Anio / Modelo: 2026',
-                '* Incluye todos los accesorios y documentacion',
-                '* Precio negociable / Oportunidad unica'
+                '* Año / Modelo: 2026',
+                '* Incluye todos los accesorios y documentación',
+                '* Precio negociable / Oportunidad única'
             ];
+            if (mdText) {
+                const lines = mdText.split('\n').map(l => l.trim()).filter(l => l.startsWith('- ') || l.startsWith('* '));
+                if (lines.length > 0) {
+                    features = lines.map(l => l.replace(/^[-*]\s+/, '* '));
+                }
+            }
 
             let fy = H - 400;
             features.forEach(ft => {
@@ -1711,8 +1868,8 @@ class PDFEditor {
                 color: rgb(1, 1, 1)
             });
 
-            page.drawText('00.000 EUR', {
-                x: W - 240,
+            page.drawText(precio, {
+                x: W - 260,
                 y: H - 610,
                 size: 32,
                 font: fontBold,
@@ -1738,24 +1895,24 @@ class PDFEditor {
                 color: rgb(0.86, 0.15, 0.15)
             });
 
-            page.drawText('TEL: 600 000 000', {
-                x: W / 2 - 170,
+            page.drawText(`TEL: ${tel}`, {
+                x: W / 2 - Math.min(180, tel.length * 10),
                 y: 75,
-                size: 36,
+                size: 34,
                 font: fontBold,
                 color: rgb(0.1, 0.1, 0.1)
             });
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'cartel_se_vende.pdf');
-            showToast('Cartel SE VENDE generado. ¡Personaliza los datos!', 'success');
+            showToast('Cartel SE VENDE actualizado desde Markdown.', 'success');
         } catch (err) {
             console.error('Error al generar cartel se vende:', err);
             showToast('Error al generar el cartel SE VENDE.', 'danger');
         }
     }
 
-    async createBusinessCardsTemplate() {
+    async createBusinessCardsTemplate(mdText) {
         showToast('Generando plantilla de Tarjetas de Presentación (8 por página)...', 'info');
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
@@ -1764,12 +1921,20 @@ class PDFEditor {
             const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
             const fontReg = await doc.embedFont(StandardFonts.Helvetica);
 
-            const cardW = 241; // ~85mm (1 pt = 1/72 inch, 85mm ≈ 240.94 pt)
-            const cardH = 156; // ~55mm (55mm ≈ 155.90 pt)
+            const cardW = 241;
+            const cardH = 156;
             const marginX = 40;
             const marginY = 50;
             const gapX = 33;
             const gapY = 32;
+
+            const nombre = this.getMdVal(mdText, 'NOMBRE', 'MARLON FALCON');
+            const cargo = this.getMdVal(mdText, 'CARGO|PUESTO', 'Consultor & Desarrollador Software');
+            const empresa = this.getMdVal(mdText, 'EMPRESA', 'Falcón Solutions');
+            const tel = this.getMdVal(mdText, 'TELEFONO|TEL', 'Tel: +34 600 000 000');
+            const email = this.getMdVal(mdText, 'EMAIL', 'Email: contacto@marlonfalcon.com');
+            const web = this.getMdVal(mdText, 'WEB|SITIO WEB', 'Web: www.marlonfalcon.com');
+            const dir = this.getMdVal(mdText, 'DIRECCION', 'Dirección: Calle Ejemplo 123, Madrid');
 
             // 2 columns, 4 rows = 8 cards total per A4 page
             for (let row = 0; row < 4; row++) {
@@ -1777,7 +1942,7 @@ class PDFEditor {
                     const x = marginX + col * (cardW + gapX);
                     const y = 841.89 - marginY - (row + 1) * cardH - row * gapY;
 
-                    // Card Outer Border (Dashed cut lines)
+                    // Card Outer Border
                     page.drawRectangle({
                         x: x,
                         y: y,
@@ -1798,16 +1963,16 @@ class PDFEditor {
                     });
 
                     // Header / Name
-                    page.drawText('MARLON FALCON', {
+                    page.drawText(nombre, {
                         x: x + 22,
                         y: y + cardH - 32,
-                        size: 13,
+                        size: 12,
                         font: fontBold,
                         color: rgb(0.09, 0.14, 0.24)
                     });
 
                     // Job Title
-                    page.drawText('Consultor & Desarrollador Software', {
+                    page.drawText(cargo, {
                         x: x + 22,
                         y: y + cardH - 46,
                         size: 8,
@@ -1824,7 +1989,7 @@ class PDFEditor {
                     });
 
                     // Details / Contact
-                    page.drawText('Tel: +34 600 000 000', {
+                    page.drawText(tel, {
                         x: x + 22,
                         y: y + cardH - 74,
                         size: 8,
@@ -1832,7 +1997,7 @@ class PDFEditor {
                         color: rgb(0.3, 0.35, 0.45)
                     });
 
-                    page.drawText('Email: contacto@marlonfalcon.com', {
+                    page.drawText(email, {
                         x: x + 22,
                         y: y + cardH - 88,
                         size: 8,
@@ -1840,7 +2005,7 @@ class PDFEditor {
                         color: rgb(0.3, 0.35, 0.45)
                     });
 
-                    page.drawText('Web: www.marlonfalcon.com', {
+                    page.drawText(web, {
                         x: x + 22,
                         y: y + cardH - 102,
                         size: 8,
@@ -1848,7 +2013,7 @@ class PDFEditor {
                         color: rgb(0.15, 0.2, 0.3)
                     });
 
-                    page.drawText('Dirección: Calle Ejemplo 123, Madrid', {
+                    page.drawText(dir, {
                         x: x + 22,
                         y: y + cardH - 116,
                         size: 7.5,
@@ -1868,14 +2033,14 @@ class PDFEditor {
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'tarjetas_presentacion.pdf');
-            showToast('Plantilla de Tarjetas de Presentación (8 por página) lista para editar e imprimir.', 'success');
+            showToast('Plantilla de Tarjetas de Presentación (8 por página) actualizada desde Markdown.', 'success');
         } catch (err) {
             console.error('Error al generar tarjetas de presentación:', err);
             showToast('Error al generar la plantilla de tarjetas de presentación.', 'danger');
         }
     }
 
-    async createBookLabelsTemplate() {
+    async createBookLabelsTemplate(mdText) {
         showToast('Generando plantilla de Etiquetas para Libros...', 'info');
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
@@ -1899,6 +2064,11 @@ class PDFEditor {
                 rgb(0.55, 0.27, 0.85), // Purpura
                 rgb(0.88, 0.35, 0.62)  // Rosa
             ];
+
+            const alumno = this.getMdVal(mdText, 'NOMBRE|ALUMNO|ALUMNO/A', 'Nombre del Alumno/a');
+            const asignatura = this.getMdVal(mdText, 'ASIGNATURA', 'Asignatura / Materia');
+            const curso = this.getMdVal(mdText, 'CURSO|CURSO / GRUPO', 'Curso / Grupo');
+            const colegio = this.getMdVal(mdText, 'COLEGIO|CENTRO|COLEGIO / CENTRO', 'Colegio / Centro');
 
             for (let row = 0; row < 3; row++) {
                 for (let col = 0; col < 2; col++) {
@@ -1935,17 +2105,30 @@ class PDFEditor {
                         color: rgb(1, 1, 1)
                     });
 
-                    // Form Lines
-                    const fields = ['ALUMNO/A:', 'ASIGNATURA:', 'CURSO / GRUPO:', 'COLEGIO / CENTRO:'];
+                    // Form Lines with values
+                    const fields = [
+                        { label: 'ALUMNO/A:', val: alumno },
+                        { label: 'ASIGNATURA:', val: asignatura },
+                        { label: 'CURSO / GRUPO:', val: curso },
+                        { label: 'COLEGIO / CENTRO:', val: colegio }
+                    ];
                     let fy = y + labelH - 65;
 
-                    fields.forEach(field => {
-                        page.drawText(field, {
+                    fields.forEach(f => {
+                        page.drawText(f.label, {
                             x: x + 15,
                             y: fy,
-                            size: 9,
+                            size: 8.5,
                             font: fontBold,
                             color: rgb(0.2, 0.25, 0.35)
+                        });
+
+                        page.drawText(f.val, {
+                            x: x + 15,
+                            y: fy - 14,
+                            size: 9.5,
+                            font: fontBold,
+                            color: rgb(0.1, 0.15, 0.25)
                         });
 
                         page.drawLine({
@@ -1962,14 +2145,14 @@ class PDFEditor {
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'etiquetas_libros.pdf');
-            showToast('Plantilla de Etiquetas para Libros (6 por página) cargada.', 'success');
+            showToast('Plantilla de Etiquetas para Libros (6 por página) actualizada desde Markdown.', 'success');
         } catch (err) {
             console.error('Error al generar etiquetas para libros:', err);
             showToast('Error al generar plantilla de etiquetas para libros.', 'danger');
         }
     }
 
-    async createQrPosterTemplate() {
+    async createQrPosterTemplate(mdText) {
         showToast('Generando Cartel con Texto y Código QR...', 'info');
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
@@ -1981,6 +2164,12 @@ class PDFEditor {
             const W = 595.28;
             const H = 841.89;
 
+            const titulo = this.getMdVal(mdText, 'TITULO|HEADER', 'ESCANEA EL CODIGO QR');
+            const subtitulo = this.getMdVal(mdText, 'SUBTITULO', 'Accede de forma rápida desde tu teléfono móvil');
+            const urlQr = this.getMdVal(mdText, 'URL_QR|URL|SITIO WEB', 'https://www.marlonfalcon.com');
+            const info = this.getMdVal(mdText, 'INFORMACION|DESCRIPCION', 'Abre la cámara de tu móvil y apunta hacia el código QR para acceder directamente.');
+            const ubicacion = this.getMdVal(mdText, 'UBICACION|HORARIO', 'Ubicación: Calle Principal 100 | Horario: 09:00 - 20:00 h');
+
             // Top Header Dark
             page.drawRectangle({
                 x: 0,
@@ -1990,18 +2179,18 @@ class PDFEditor {
                 color: rgb(0.06, 0.09, 0.16)
             });
 
-            page.drawText('ESCANEA EL CODIGO QR', {
-                x: W / 2 - 180,
+            page.drawText(titulo, {
+                x: W / 2 - Math.min(220, titulo.length * 6),
                 y: H - 85,
-                size: 26,
+                size: 24,
                 font: fontBold,
                 color: rgb(0.23, 0.51, 0.96)
             });
 
-            page.drawText('Accede de forma rapida desde tu telefono movil', {
-                x: W / 2 - 150,
+            page.drawText(subtitulo, {
+                x: W / 2 - Math.min(200, subtitulo.length * 3.5),
                 y: H - 115,
-                size: 12,
+                size: 11,
                 font: fontReg,
                 color: rgb(0.8, 0.8, 0.8)
             });
@@ -2033,7 +2222,7 @@ class PDFEditor {
             drawQrFinderPattern(qrX + qrSize - 60, qrY + qrSize - 60);
             drawQrFinderPattern(qrX + 10, qrY + 10);
 
-            // Pseudo-random grid pattern for realistic QR look
+            // Grid pattern
             const gridCells = 16;
             const cellSize = qrSize / gridCells;
             for (let r = 0; r < gridCells; r++) {
@@ -2065,24 +2254,24 @@ class PDFEditor {
             page.drawText('INFORMACION DEL ANUNCIO O EVENTO', {
                 x: 60,
                 y: 325,
-                size: 16,
+                size: 15,
                 font: fontBold,
                 color: rgb(0.1, 0.15, 0.25)
             });
 
-            page.drawText('Abre la camara de tu movil y apunta hacia el codigo QR para abrir directamente la pagina web, menu digital, catalogo o formulario de registro.', {
+            page.drawText(info, {
                 x: 60,
                 y: 280,
-                size: 11,
+                size: 10.5,
                 font: fontReg,
                 color: rgb(0.3, 0.35, 0.45),
                 lineHeight: 16
             });
 
             page.drawText('SITIO WEB / ENLACE:', { x: 60, y: 220, size: 12, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
-            page.drawText('https://www.marlonfalcon.com', { x: 60, y: 195, size: 16, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
+            page.drawText(urlQr, { x: 60, y: 195, size: 15, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
 
-            page.drawText('Ubicacion: Calle Principal 100 | Horario: 09:00 - 20:00 h', {
+            page.drawText(ubicacion, {
                 x: 60,
                 y: 130,
                 size: 10,
@@ -2092,14 +2281,14 @@ class PDFEditor {
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'cartel_qr.pdf');
-            showToast('Cartel con QR cargado. ¡Puedes personalizar texto y enlace!', 'success');
+            showToast('Cartel con QR actualizado desde Markdown.', 'success');
         } catch (err) {
             console.error('Error al generar cartel con QR:', err);
             showToast('Error al generar el cartel con QR.', 'danger');
         }
     }
 
-    async createMobileWireframeTemplate() {
+    async createMobileWireframeTemplate(mdText) {
         showToast('Generando Prototipo de App Móvil...', 'info');
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
@@ -2111,8 +2300,13 @@ class PDFEditor {
             const W = 841.89;
             const H = 595.28;
 
+            const tituloApp = this.getMdVal(mdText, 'TITULO_APP|TITULO', 'PROTOTIPO Y WIREFRAME DE APP MOVIL');
+            const p1 = this.getMdVal(mdText, 'PANTALLA_1', '1. Pantalla Login / Home');
+            const p2 = this.getMdVal(mdText, 'PANTALLA_2', '2. Pantalla Principal');
+            const p3 = this.getMdVal(mdText, 'PANTALLA_3', '3. Detalle / Perfil');
+
             // Title
-            page.drawText('PROTOTIPO Y WIREFRAME DE APP MOVIL', {
+            page.drawText(tituloApp, {
                 x: 40,
                 y: H - 45,
                 size: 18,
@@ -2120,7 +2314,7 @@ class PDFEditor {
                 color: rgb(0.1, 0.15, 0.25)
             });
 
-            page.drawText('Diseno de pantallas y flujo de navegacion para iOS / Android', {
+            page.drawText('Diseño de pantallas y flujo de navegación para iOS / Android', {
                 x: 40,
                 y: H - 65,
                 size: 10,
@@ -2135,7 +2329,7 @@ class PDFEditor {
             const startX = 40;
             const startY = 50;
 
-            const screenTitles = ['1. Pantalla Login / Home', '2. Pantalla Principal', '3. Detalle / Perfil'];
+            const screenTitles = [p1, p2, p3];
 
             for (let i = 0; i < 3; i++) {
                 const px = startX + i * (phoneW + gap);
@@ -2191,7 +2385,7 @@ class PDFEditor {
                 page.drawText(screenTitles[i], {
                     x: px,
                     y: py + phoneH + 12,
-                    size: 11,
+                    size: 10.5,
                     font: fontBold,
                     color: rgb(0.23, 0.51, 0.96)
                 });
@@ -2199,14 +2393,14 @@ class PDFEditor {
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'prototipo_mobile.pdf');
-            showToast('Prototipo de App Móvil listo. ¡Dibuja o añade cajas y textos!', 'success');
+            showToast('Prototipo de App Móvil actualizado desde Markdown.', 'success');
         } catch (err) {
             console.error('Error al generar prototipo mobile:', err);
             showToast('Error al generar prototipo mobile.', 'danger');
         }
     }
 
-    async createDesktopWireframeTemplate() {
+    async createDesktopWireframeTemplate(mdText) {
         showToast('Generando Prototipo de App Desktop / Web...', 'info');
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
@@ -2217,6 +2411,11 @@ class PDFEditor {
 
             const W = 841.89;
             const H = 595.28;
+
+            const urlWin = this.getMdVal(mdText, 'TITULO_VENTANA|URL', 'https://mi-aplicacion-desktop.com/dashboard');
+            const nomApp = this.getMdVal(mdText, 'NOMBRE_APP|APP', 'MI APP DESKTOP');
+            const menusStr = this.getMdVal(mdText, 'MENUS', 'Dashboard, Proyectos, Analítica, Usuarios, Ajustes');
+            const panel = this.getMdVal(mdText, 'PANEL|TITULO_PANEL', 'PANEL PRINCIPAL DE TRABAJO');
 
             // Desktop Window Frame
             const winX = 35;
@@ -2257,7 +2456,7 @@ class PDFEditor {
                 color: rgb(0.2, 0.25, 0.38)
             });
 
-            page.drawText('https://mi-aplicacion-desktop.com/dashboard', {
+            page.drawText(urlWin, {
                 x: winX + 85,
                 y: winY + winH - 21,
                 size: 8,
@@ -2277,25 +2476,25 @@ class PDFEditor {
                 color: rgb(0.08, 0.12, 0.2)
             });
 
-            page.drawText('MI APP DESKTOP', {
+            page.drawText(nomApp, {
                 x: winX + 15,
                 y: winY + bodyH - 30,
-                size: 11,
+                size: 10.5,
                 font: fontBold,
                 color: rgb(0.23, 0.51, 0.96)
             });
 
-            const navItems = ['Dashboard', 'Proyectos', 'Analitica', 'Usuarios', 'Ajustes'];
+            const navItems = menusStr.split(',').map(m => m.trim());
             let ny = winY + bodyH - 70;
             navItems.forEach(item => {
                 page.drawText(`- ${item}`, {
                     x: winX + 15,
                     y: ny,
-                    size: 10,
+                    size: 9.5,
                     font: fontReg,
                     color: rgb(0.8, 0.85, 0.95)
                 });
-                ny -= 30;
+                ny -= 28;
             });
 
             // Main Content Area Wireframe
@@ -2304,10 +2503,10 @@ class PDFEditor {
             const contentW = winW - sidebarW - 40;
             const contentH = bodyH - 40;
 
-            page.drawText('PANEL PRINCIPAL DE TRABAJO', {
+            page.drawText(panel, {
                 x: contentX,
                 y: contentY + contentH - 25,
-                size: 16,
+                size: 15,
                 font: fontBold,
                 color: rgb(0.1, 0.15, 0.25)
             });
@@ -2351,14 +2550,14 @@ class PDFEditor {
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'prototipo_desktop.pdf');
-            showToast('Prototipo App Desktop listo. ¡Puedes diagramar tus vistas!', 'success');
+            showToast('Prototipo App Desktop actualizado desde Markdown.', 'success');
         } catch (err) {
             console.error('Error al generar prototipo desktop:', err);
             showToast('Error al generar prototipo desktop.', 'danger');
         }
     }
 
-    async createJobOfferTemplate() {
+    async createJobOfferTemplate(mdText) {
         showToast('Generando plantilla de Oferta de Empleo...', 'info');
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
@@ -2369,6 +2568,13 @@ class PDFEditor {
 
             const W = 595.28;
             const H = 841.89;
+
+            const puesto = this.getMdVal(mdText, 'PUESTO|VACANTE', 'DESARROLLADOR / CONSULTOR SOFTWARE SENIOR');
+            const empresa = this.getMdVal(mdText, 'EMPRESA', 'Falcon Tech Solutions');
+            const ubi = this.getMdVal(mdText, 'UBICACION', 'Madrid, España / Híbrido');
+            const jornada = this.getMdVal(mdText, 'JORNADA', 'Tiempo Completo (40h/semana)');
+            const salario = this.getMdVal(mdText, 'SALARIO|SUELDO', '35.000 EUR - 45.000 EUR Brutos / Año');
+            const contacto = this.getMdVal(mdText, 'CONTACTO|ENVIO DE CV', 'Email: rrhh@empresa.com | Web: www.marlonfalcon.com/empleo');
 
             // Header Dark Blue Bar
             page.drawRectangle({
@@ -2406,17 +2612,17 @@ class PDFEditor {
                 borderWidth: 1.5
             });
 
-            page.drawText('PUESTO: DESARROLLADOR / CONSULTOR SOFTWARE SENIOR', {
+            page.drawText(`PUESTO: ${puesto}`, {
                 x: 50,
                 y: H - 170,
-                size: 13,
+                size: 12,
                 font: fontBold,
                 color: rgb(0.09, 0.14, 0.24)
             });
 
             // Company & Details Box
             page.drawText('INFORMACION GENERAL:', { x: 35, y: H - 225, size: 12, font: fontBold, color: rgb(0.2, 0.25, 0.35) });
-            page.drawText('Empresa: Falcon Tech Solutions\nUbicacion: Madrid, Espana / Hibrido\nJornada: Tiempo Completo (40h/semana)\nContrato: Indefinido', {
+            page.drawText(`Empresa: ${empresa}\nUbicación: ${ubi}\nJornada: ${jornada}`, {
                 x: 35,
                 y: H - 245,
                 size: 10,
@@ -2438,12 +2644,19 @@ class PDFEditor {
 
             page.drawText('REQUISITOS DEL PUESTO:', { x: 50, y: H - 350, size: 12, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
 
-            const reqs = [
-                '* Experiencia minima de 3-5 anos en desarrollo web y herramientas digitales.',
+            let reqs = [
+                '* Experiencia mínima de 3-5 años en desarrollo web y herramientas digitales.',
                 '* Dominio de Python, JavaScript, HTML5, CSS3 y entornos de servidor.',
-                '* Capacidad de trabajo en equipo, resolucion de problemas y proactividad.',
-                '* Titulacion universitaria o ciclo formativo de grado superior en informatica.'
+                '* Capacidad de trabajo en equipo, resolución de problemas y proactividad.'
             ];
+
+            if (mdText) {
+                const lines = mdText.split('\n').map(l => l.trim()).filter(l => l.startsWith('- ') || l.startsWith('* '));
+                if (lines.length > 0) {
+                    reqs = lines.map(l => l.replace(/^[-*]\s+/, '* '));
+                }
+            }
+
             let ry = H - 375;
             reqs.forEach(req => {
                 page.drawText(req, { x: 50, y: ry, size: 9.5, font: fontReg, color: rgb(0.3, 0.3, 0.3) });
@@ -2460,7 +2673,7 @@ class PDFEditor {
             });
 
             page.drawText('CONDICIONES Y BENEFICIOS:', { x: 50, y: H - 505, size: 12, font: fontBold, color: rgb(1, 1, 1) });
-            page.drawText('Rango Salarial: 35.000 EUR - 45.000 EUR Brutos / Anio\nBeneficios: Teletrabajo parcial, seguro medico privado, horario flexible, plan de formacion continua.', {
+            page.drawText(`Rango Salarial: ${salario}\nBeneficios: Teletrabajo parcial, seguro médico privado, horario flexible.`, {
                 x: 50,
                 y: H - 530,
                 size: 10,
@@ -2481,7 +2694,7 @@ class PDFEditor {
             });
 
             page.drawText('COMO POSTULARSE / ENVIO DE CV:', { x: 50, y: 140, size: 12, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
-            page.drawText('Envianos tu Curriculum Vitae actualizado indicando en el asunto "Vacante Senior":\nEmail: rrhh@empresa.com\nSitio web: www.marlonfalcon.com/empleo', {
+            page.drawText(`Enviános tu Curriculum Vitae actualizado:\n${contacto}`, {
                 x: 50,
                 y: 115,
                 size: 10,
@@ -2492,14 +2705,14 @@ class PDFEditor {
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'oferta_empleo.pdf');
-            showToast('Plantilla de Oferta de Empleo cargada. ¡Puedes personalizar los datos!', 'success');
+            showToast('Plantilla de Oferta de Empleo actualizada desde Markdown.', 'success');
         } catch (err) {
             console.error('Error al generar oferta de empleo:', err);
             showToast('Error al generar plantilla de oferta de empleo.', 'danger');
         }
     }
 
-    async createMoneyReceiptTemplate() {
+    async createMoneyReceiptTemplate(mdText) {
         showToast('Generando Comprobante de Recepción de Dinero...', 'info');
         try {
             const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
@@ -2511,7 +2724,13 @@ class PDFEditor {
             const W = 595.28;
             const H = 841.89;
 
-            const todayStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const numero = this.getMdVal(mdText, 'NUMERO|RECIBO', 'REC-2026-001');
+            const fecha = this.getMdVal(mdText, 'FECHA', new Date().toLocaleDateString('es-ES'));
+            const pagador = this.getMdVal(mdText, 'PAGADOR|DE', 'Nombre / Razón Social del cliente que entrega dinero');
+            const cobrador = this.getMdVal(mdText, 'COBRADOR|RECIBE', 'Marlon Falcón Hernández / Empresa que recibe');
+            const importe = this.getMdVal(mdText, 'IMPORTE', '500.00 EUR');
+            const concepto = this.getMdVal(mdText, 'CONCEPTO', 'Pago por concepto de servicios prestados / anticipo');
+            const formaPago = this.getMdVal(mdText, 'FORMA_PAGO|FORMA DE PAGO', '[X] Efectivo     [ ] Transferencia Bancaria     [ ] Tarjeta');
 
             const startY = H - 40;
 
@@ -2532,7 +2751,7 @@ class PDFEditor {
                 color: rgb(0.23, 0.51, 0.96)
             });
 
-            page.drawText('RECIBO N: REC-2026-001', {
+            page.drawText(`RECIBO N: ${numero}`, {
                 x: W - 240,
                 y: startY - 26,
                 size: 10,
@@ -2540,7 +2759,7 @@ class PDFEditor {
                 color: rgb(1, 1, 1)
             });
 
-            page.drawText(`FECHA DE EMISION: ${todayStr}`, {
+            page.drawText(`FECHA DE EMISION: ${fecha}`, {
                 x: W - 240,
                 y: startY - 44,
                 size: 9.5,
@@ -2564,20 +2783,19 @@ class PDFEditor {
             // Row 1: De (Pagador)
             let currY = startY - 125;
             page.drawText('DE (PAGADOR):', { x: 55, y: currY, size: 11, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
-            page.drawText('Nombre / Razon Social del cliente o persona que entrega el dinero', { x: 175, y: currY, size: 10.5, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
+            page.drawText(pagador, { x: 175, y: currY, size: 10.5, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
             page.drawLine({ start: { x: 170, y: currY - 4 }, end: { x: W - 55, y: currY - 4 }, thickness: 0.8, color: rgb(0.7, 0.75, 0.85) });
 
             // Row 2: Recibe (Beneficiario)
             currY -= 50;
             page.drawText('RECIBE (COBRADOR):', { x: 55, y: currY, size: 11, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
-            page.drawText('Marlon Falcon Hernandez / Empresa que recibe el dinero', { x: 205, y: currY, size: 10.5, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
+            page.drawText(cobrador, { x: 205, y: currY, size: 10.5, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
             page.drawLine({ start: { x: 200, y: currY - 4 }, end: { x: W - 55, y: currY - 4 }, thickness: 0.8, color: rgb(0.7, 0.75, 0.85) });
 
             // Row 3: Importe (Monto numerico con fondo blanco)
             currY -= 55;
             page.drawText('IMPORTE:', { x: 55, y: currY + 4, size: 12, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
             
-            // Fondo Blanco para el importe
             page.drawRectangle({
                 x: 140,
                 y: currY - 8,
@@ -2587,18 +2805,18 @@ class PDFEditor {
                 borderColor: rgb(0.23, 0.51, 0.96),
                 borderWidth: 1.5
             });
-            page.drawText('0.00 EUR', { x: 155, y: currY, size: 16, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
+            page.drawText(importe, { x: 155, y: currY, size: 15, font: fontBold, color: rgb(0.23, 0.51, 0.96) });
 
             // Row 4: Concepto
             currY -= 65;
             page.drawText('EN CONCEPTO DE:', { x: 55, y: currY, size: 11, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
-            page.drawText('Pago por concepto de servicios prestados / anticipo / saldo pendiente', { x: 180, y: currY, size: 10, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
+            page.drawText(concepto, { x: 180, y: currY, size: 10, font: fontReg, color: rgb(0.2, 0.2, 0.2) });
             page.drawLine({ start: { x: 175, y: currY - 4 }, end: { x: W - 55, y: currY - 4 }, thickness: 0.8, color: rgb(0.7, 0.75, 0.85) });
 
             // Row 5: Forma de Pago
             currY -= 55;
             page.drawText('FORMA DE PAGO:', { x: 55, y: currY, size: 11, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
-            page.drawText('[X] Efectivo     [ ] Transferencia Bancaria     [ ] Tarjeta     [ ] Cheque', {
+            page.drawText(formaPago, {
                 x: 180,
                 y: currY,
                 size: 10,
@@ -2616,7 +2834,7 @@ class PDFEditor {
 
             const bytes = await doc.save();
             await this.loadPDFBytes(bytes, 'comprobante_recibo_dinero.pdf');
-            showToast('Comprobante de Recepción de Dinero (1 por página con importe en fondo blanco) listo.', 'success');
+            showToast('Comprobante de Dinero actualizado desde Markdown.', 'success');
         } catch (err) {
             console.error('Error al generar comprobante de dinero:', err);
             showToast('Error al generar el comprobante de dinero.', 'danger');
@@ -2682,16 +2900,28 @@ class PDFEditor {
             }
         });
 
+        const modalSelect = document.getElementById('modal-md-template-select');
+        const sideSelect = document.getElementById('side-md-template-select');
+
+        modalSelect?.addEventListener('change', (e) => {
+            const selectedType = e.target.value;
+            this.currentTemplateType = selectedType;
+            if (sideSelect) sideSelect.value = selectedType;
+            const newMd = this.getMarkdownSampleForType(selectedType);
+            if (textarea) textarea.value = newMd;
+        });
+
         generateBtn?.addEventListener('click', async () => {
             const mdText = textarea?.value || '';
             if (!mdText.trim()) {
                 showToast('El contenido Markdown está vacío.', 'warning');
                 return;
             }
+            const selType = modalSelect ? modalSelect.value : (this.currentTemplateType || 'presentation');
             this.currentMarkdownText = mdText;
             localStorage.setItem('saved_presentation_md', mdText);
             closeModal();
-            await this.createPresentationFromMarkdown(mdText);
+            await this.createPDFFromMarkdown(mdText, selType);
         });
 
         this.openMarkdownModal = openModal;
@@ -2704,8 +2934,18 @@ class PDFEditor {
         const closeBtn = document.getElementById('btn-close-md-side-panel');
         const updateBtn = document.getElementById('btn-update-from-side-md');
         const sideTextarea = document.getElementById('md-side-textarea');
+        const sideSelect = document.getElementById('side-md-template-select');
+        const modalSelect = document.getElementById('modal-md-template-select');
         const uploadBtn = document.getElementById('btn-upload-side-md-file');
         const sideFileInput = document.getElementById('side-md-file-input');
+
+        sideSelect?.addEventListener('change', (e) => {
+            const selectedType = e.target.value;
+            this.currentTemplateType = selectedType;
+            if (modalSelect) modalSelect.value = selectedType;
+            const newMd = this.getMarkdownSampleForType(selectedType);
+            if (sideTextarea) sideTextarea.value = newMd;
+        });
 
         const togglePanel = (show) => {
             if (!sidePanel) return;
@@ -2715,7 +2955,10 @@ class PDFEditor {
             if (shouldShow) {
                 sidePanel.style.display = 'flex';
                 toggleBtn?.classList.add('active');
-                const textToUse = this.currentMarkdownText || localStorage.getItem('saved_presentation_md') || this.getDefaultMarkdownSample();
+                if (sideSelect && this.currentTemplateType) {
+                    sideSelect.value = this.currentTemplateType;
+                }
+                const textToUse = this.currentMarkdownText || localStorage.getItem('saved_presentation_md') || this.getMarkdownSampleForType(this.currentTemplateType || 'presentation');
                 if (sideTextarea) sideTextarea.value = textToUse;
             } else {
                 sidePanel.style.display = 'none';
@@ -2754,7 +2997,8 @@ class PDFEditor {
                 showToast('El contenido Markdown está vacío.', 'warning');
                 return;
             }
-            await this.createPresentationFromMarkdown(mdText);
+            const selType = sideSelect ? sideSelect.value : (this.currentTemplateType || 'presentation');
+            await this.createPDFFromMarkdown(mdText, selType);
         };
 
         updateBtn?.addEventListener('click', handleUpdate);
@@ -2806,8 +3050,63 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
         if (typeof this.openMarkdownModal === 'function') {
             this.openMarkdownModal();
         } else {
-            await this.createPresentationFromMarkdown(this.getDefaultMarkdownSample());
+            await this.createPDFFromMarkdown(this.getDefaultMarkdownSample(), 'presentation');
         }
+    }
+
+    async createPDFFromMarkdown(mdText, templateType = 'presentation') {
+        if (!mdText || !mdText.trim()) {
+            showToast('El contenido Markdown está vacío.', 'warning');
+            return;
+        }
+
+        this.currentTemplateType = templateType;
+        this.currentMarkdownText = mdText;
+        localStorage.setItem('saved_presentation_md', mdText);
+
+        // Sync textareas if present
+        const modalTextarea = document.getElementById('md-editor-textarea');
+        if (modalTextarea && modalTextarea.value !== mdText) {
+            modalTextarea.value = mdText;
+        }
+        const sideTextarea = document.getElementById('md-side-textarea');
+        if (sideTextarea && sideTextarea.value !== mdText) {
+            sideTextarea.value = mdText;
+        }
+
+        if (templateType === 'invoice') {
+            await this.createInvoiceTemplate(mdText);
+            return;
+        } else if (templateType === 'diploma') {
+            await this.createDiplomaTemplate(mdText);
+            return;
+        } else if (templateType === 'sale') {
+            await this.createSaleSignTemplate(mdText);
+            return;
+        } else if (templateType === 'business-cards') {
+            await this.createBusinessCardsTemplate(mdText);
+            return;
+        } else if (templateType === 'book-labels') {
+            await this.createBookLabelsTemplate(mdText);
+            return;
+        } else if (templateType === 'qr-poster') {
+            await this.createQrPosterTemplate(mdText);
+            return;
+        } else if (templateType === 'mobile-wireframe') {
+            await this.createMobileWireframeTemplate(mdText);
+            return;
+        } else if (templateType === 'desktop-wireframe') {
+            await this.createDesktopWireframeTemplate(mdText);
+            return;
+        } else if (templateType === 'job-offer') {
+            await this.createJobOfferTemplate(mdText);
+            return;
+        } else if (templateType === 'money-receipt') {
+            await this.createMoneyReceiptTemplate(mdText);
+            return;
+        }
+
+        await this.createPresentationFromMarkdown(mdText);
     }
 
     async createPresentationFromMarkdown(mdText) {
