@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor & Firma de PDF - 100% Local</title>
+    
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- App Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- PDF.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- PDF-Lib CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="app-header">
+        <div class="logo-container">
+            <i class="fas fa-file-pdf"></i>
+            <span>PDF Local Editor</span>
+            <span class="badge-local">
+                <i class="fas fa-shield-alt"></i> 100% Local (Sin Nube)
+            </span>
+        </div>
+        <div class="header-actions">
+            <span id="header-file-title" style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;"></span>
+            <button id="btn-fullscreen" class="btn btn-secondary" title="Pantalla Completa">
+                <i class="fas fa-expand"></i> Pantalla Completa
+            </button>
+            <button id="btn-screenshot" class="btn btn-primary" title="Capturar Pantalla e insertar 2 por página con cabecera editable">
+                <i class="fas fa-camera"></i> Capturar Pantalla
+            </button>
+            <button id="btn-undo-step" class="btn btn-secondary" style="display: none;" title="Deshacer último cambio (Paso a paso)">
+                <i class="fas fa-undo"></i> Deshacer
+            </button>
+            <button id="btn-redo-step" class="btn btn-secondary" style="display: none;" title="Rehacer cambio">
+                <i class="fas fa-redo"></i> Rehacer
+            </button>
+            <button id="btn-revert-changes" class="btn btn-warning" style="display: none;" title="Restaurar el PDF a su estado original sin ediciones ni firmas">
+                <i class="fas fa-rotate-left"></i> Revertir Todo
+            </button>
+            <button id="btn-create-blank-pdf" class="btn btn-secondary" title="Crear un nuevo documento PDF en blanco">
+                <i class="fas fa-file-medical"></i> Nuevo PDF
+            </button>
+            <button id="btn-header-open-pdf" class="btn btn-secondary">
+                <i class="fas fa-folder-open"></i> Abrir PDF
+            </button>
+            <button id="btn-open-signature-modal" class="btn btn-primary">
+                <i class="fas fa-pen-nib"></i> Crear Firma
+            </button>
+            <button id="btn-export-split-pdf" class="btn btn-secondary" style="display: none;" title="Exportar cada página como un archivo PDF separado">
+                <i class="fas fa-file-export"></i> Exportar por Páginas
+            </button>
+            <button id="btn-export-pdf" class="btn btn-success" style="display: none;">
+                <i class="fas fa-download"></i> Descargar PDF
+            </button>
+        </div>
+    </header>
+
+    <!-- App Container -->
+    <div class="app-container">
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="app-sidebar">
+            
+            <!-- Saved Signatures Section (localStorage) -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span>Firmas (localStorage)</span>
+                    <i class="fas fa-database" title="Almacenado localmente en tu navegador"></i>
+                </div>
+                <div id="saved-signatures-list" class="signature-list">
+                    <!-- Populated dynamically via JS -->
+                    <div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 1rem 0;">
+                        No tienes firmas guardadas. Haz clic en "Crear Firma".
+                    </div>
+                </div>
+                <button id="btn-sidebar-add-sig" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 0.75rem;">
+                    <i class="fas fa-plus"></i> Nueva Firma
+                </button>
+            </div>
+
+            <!-- Page Layers Section (Photoshop style) -->
+            <div class="sidebar-section" style="max-height: 280px; display: flex; flex-direction: column;">
+                <div class="sidebar-title">
+                    <span>Capas de la Página</span>
+                    <button id="btn-add-custom-layer" class="btn btn-secondary btn-xs" title="Añadir Nueva Capa">
+                        <i class="fas fa-plus"></i> Nueva Capa
+                    </button>
+                </div>
+                <div id="layers-container" class="layers-container">
+                    <!-- Populated dynamically via JS -->
+                    <div style="color: var(--text-muted); font-size: 0.78rem; text-align: center; padding: 0.5rem 0;">
+                        Carga un PDF para ver y gestionar sus capas.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Thumbnails -->
+            <div class="sidebar-title" style="padding: 1rem 1rem 0 1rem;">
+                <span>Páginas del PDF</span>
+            </div>
+            <div class="thumbnails-container" id="thumbnails-container">
+                <!-- PDF Page Thumbnails rendered here -->
+            </div>
+
+            <!-- Author Info Footer -->
+            <div class="sidebar-footer">
+                <div class="author-name">
+                    <i class="fas fa-user-code"></i> Marlon Falcon Hernandez
+                </div>
+                <a href="https://www.marlonfalcon.com" target="_blank" rel="noopener noreferrer" class="author-link">
+                    <i class="fas fa-globe"></i> www.marlonfalcon.com
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+
+            <!-- Drag and Drop Upload Zone -->
+            <div id="drop-zone-overlay" class="drop-zone-overlay">
+                <div class="upload-card" id="drop-zone">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <h2>Sube o crea tu archivo PDF</h2>
+                    <p style="color: var(--text-muted); margin: 0.75rem 0 1.5rem 0; font-size: 0.9rem;">
+                        Arrastra y suelta tu PDF, explora tu equipo o crea uno en blanco.<br>
+                        <strong>Tus archivos NUNCA salen de tu navegador.</strong>
+                    </p>
+                    <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" id="select-pdf-btn" class="btn btn-primary btn-lg">
+                            <i class="fas fa-folder-open"></i> Seleccionar PDF
+                        </button>
+                        <button type="button" id="create-blank-pdf-card-btn" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-file-medical"></i> Crear PDF en Blanco
+                        </button>
+                    </div>
+                    <input type="file" id="file-input" accept="application/pdf, .pdf" style="display: none;">
+                </div>
+            </div>
+
+            <!-- Editor Toolbar & Viewer -->
+            <div id="editor-workspace" style="display: none; flex-direction: column; flex: 1; height: 100%;">
+                
+                <!-- Toolbar -->
+                <div class="toolbar">
+                    <!-- Nav & Zoom Group -->
+                    <div class="toolbar-group">
+                        <button id="btn-prev-page" class="btn btn-secondary btn-icon" title="Página Anterior">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span style="font-size: 0.85rem; font-weight: 600;">
+                            Pág. <input type="number" id="page-num-input" value="1" min="1" style="width: 45px; text-align: center;" class="form-input">
+                            <span id="total-pages-label">/ 0</span>
+                        </span>
+                        <button id="btn-next-page" class="btn btn-secondary btn-icon" title="Página Siguiente">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <div class="toolbar-divider"></div>
+                        <button id="btn-zoom-out" class="btn btn-secondary btn-icon" title="Alejar">
+                            <i class="fas fa-search-minus"></i>
+                        </button>
+                        <span id="zoom-percentage" style="font-size: 0.8rem; width: 40px; text-align: center; color: var(--text-muted);">100%</span>
+                        <button id="btn-zoom-in" class="btn btn-secondary btn-icon" title="Acercar">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <!-- Main Mode Tools (Mover, Dibujar, Resaltar) -->
+                    <div class="toolbar-group">
+                        <button id="tool-select-btn" class="btn btn-primary btn-sm active" title="Modo Selección y Mover elementos">
+                            <i class="fas fa-mouse-pointer"></i> Mover
+                        </button>
+                        <button id="tool-draw-btn" class="btn btn-secondary btn-sm" title="Dibujar con Lápiz a mano alzada">
+                            <i class="fas fa-pen"></i> Dibujar
+                        </button>
+                        <button id="tool-highlight-btn" class="btn btn-secondary btn-sm" title="Marcador Resaltador">
+                            <i class="fas fa-highlighter"></i> Resaltar
+                        </button>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <!-- Drawing Options (Color & Size) -->
+                    <div class="toolbar-group" id="draw-options-group">
+                        <div class="draw-color-picker">
+                            <div class="draw-color-dot active" style="background-color: #000000;" data-color="#000000" title="Negro"></div>
+                            <div class="draw-color-dot" style="background-color: #1d4ed8;" data-color="#1d4ed8" title="Azul"></div>
+                            <div class="draw-color-dot" style="background-color: #dc2626;" data-color="#dc2626" title="Rojo"></div>
+                            <div class="draw-color-dot" style="background-color: #059669;" data-color="#059669" title="Verde"></div>
+                            <div class="draw-color-dot" style="background-color: #f59e0b;" data-color="#f59e0b" title="Amarillo"></div>
+                        </div>
+                        <div class="draw-size-picker">
+                            <button class="btn btn-secondary btn-xs" data-size="1" title="Ultra Fino (1px)">1px</button>
+                            <button class="btn btn-secondary btn-xs active" data-size="2" title="Fino (2px)">2px</button>
+                            <button class="btn btn-secondary btn-xs" data-size="3" title="Normal (3px)">3px</button>
+                            <button class="btn btn-secondary btn-xs" data-size="5" title="Medio (5px)">5px</button>
+                            <button class="btn btn-secondary btn-xs" data-size="8" title="Grueso (8px)">8px</button>
+                            <button class="btn btn-secondary btn-xs" data-size="12" title="Ancho (12px)">12px</button>
+                        </div>
+                        <button id="btn-undo-draw" class="btn btn-secondary btn-icon btn-sm" title="Deshacer último trazo de dibujo">
+                            <i class="fas fa-undo-alt"></i>
+                        </button>
+                        <button id="btn-clear-draw" class="btn btn-danger btn-icon btn-sm" title="Borrar todos los dibujos de esta página">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <!-- Page & Elements Actions -->
+                    <div class="toolbar-group">
+                        <button id="btn-add-text" class="btn btn-secondary btn-sm" title="Añadir Texto Nuevo">
+                            <i class="fas fa-font"></i> Texto
+                        </button>
+                        <button id="btn-add-image" class="btn btn-secondary btn-sm" title="Insertar Imagen (PNG, JPG, WebP)">
+                            <i class="fas fa-image"></i> Imagen
+                        </button>
+                        <input type="file" id="image-file-input" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" style="display: none;">
+                        <button id="btn-add-table" class="btn btn-secondary btn-sm" title="Añadir Tabla Personalizable">
+                            <i class="fas fa-table"></i> Tabla
+                        </button>
+                        <button id="btn-add-shape-rect" class="btn btn-secondary btn-sm" title="Añadir Rectángulo">
+                            <i class="far fa-square"></i> Rectángulo
+                        </button>
+                        <button id="btn-add-shape-circle" class="btn btn-secondary btn-sm" title="Añadir Círculo">
+                            <i class="far fa-circle"></i> Círculo
+                        </button>
+                        <button id="btn-add-shape-arrow" class="btn btn-secondary btn-sm" title="Añadir Flecha">
+                            <i class="fas fa-long-arrow-alt-right"></i> Flecha
+                        </button>
+                        <button id="btn-add-shape-star" class="btn btn-secondary btn-sm" title="Añadir Estrella">
+                            <i class="far fa-star"></i> Estrella
+                        </button>
+                        <button id="btn-add-whiteout" class="btn btn-secondary btn-sm" title="Cubrir / Borrar Texto Existente (Tipex)">
+                            <i class="fas fa-square"></i> Tipex
+                        </button>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <!-- Alignment, Grid, Rulers & Paper Size Group -->
+                    <div class="toolbar-group">
+                        <button id="btn-toggle-grid" class="btn btn-secondary btn-sm" title="Activar / Desactivar Malla de Cuadros para Alinear">
+                            <i class="fas fa-th"></i> Malla
+                        </button>
+                        <button id="btn-toggle-margins" class="btn btn-secondary btn-sm" title="Mostrar / Ocultar Márgenes de Impresión">
+                            <i class="fas fa-crop-alt"></i> Márgenes
+                        </button>
+                        <button id="btn-toggle-rulers" class="btn btn-secondary btn-sm" title="Mostrar / Ocultar Reglas en los Bordes">
+                            <i class="fas fa-ruler-combined"></i> Reglas
+                        </button>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.25rem;">Papel:</span>
+                        <select id="paper-size-select" class="form-input" style="padding: 0.2rem 0.4rem; font-size: 0.75rem; width: auto;" title="Cambiar tamaño del papel de la página actual">
+                            <option value="a4">A4 (210×297 mm)</option>
+                            <option value="a3">A3 (297×420 mm)</option>
+                            <option value="letter">Carta (216×279 mm)</option>
+                            <option value="legal">Oficio (216×356 mm)</option>
+                            <option value="a5">A5 (148×210 mm)</option>
+                            <option value="square">Cuadrado (200×200 mm)</option>
+                        </select>
+                        <button id="btn-add-blank-page" class="btn btn-secondary btn-sm" title="Añadir una página en blanco al PDF">
+                            <i class="fas fa-file-circle-plus"></i> +Página
+                        </button>
+                        <button id="btn-rotate-left" class="btn btn-secondary btn-icon btn-sm" title="Rotar Izquierda">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                        <button id="btn-rotate-right" class="btn btn-secondary btn-icon btn-sm" title="Rotar Derecha">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                        <button id="btn-delete-page" class="btn btn-danger btn-icon btn-sm" title="Eliminar Página Actual">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Canvas Viewport -->
+                <div class="viewport-container" id="viewport-container">
+                    <div id="ruler-corner" class="ruler-corner" style="display: none;"></div>
+                    <div id="ruler-horizontal" class="ruler-horizontal" style="display: none;"></div>
+                    <div id="ruler-vertical" class="ruler-vertical" style="display: none;"></div>
+                    <div class="page-container" id="page-container">
+                        <canvas id="pdf-canvas" class="pdf-canvas"></canvas>
+                        <canvas id="draw-canvas" class="draw-canvas"></canvas>
+                        <div id="grid-overlay" class="grid-overlay"></div>
+                        <div id="margins-overlay" class="margins-overlay"></div>
+                        <div id="annotation-layer" class="annotation-layer"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal for Selecting PDF Template -->
+    <div class="modal-backdrop" id="template-modal">
+        <div class="modal-card" style="max-width: 680px;">
+            <div class="modal-header">
+                <h3 style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-file-medical"></i> Seleccionar Plantilla PDF</h3>
+                <button class="btn btn-secondary btn-icon btn-sm" id="btn-close-template-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                    Elige una plantilla base para comenzar tu nuevo documento PDF:
+                </p>
+                <div class="template-grid">
+                    <div class="template-card" data-template="blank">
+                        <div class="template-icon"><i class="fas fa-file"></i></div>
+                        <div class="template-title">Documento en Blanco</div>
+                        <div class="template-desc">Página A4 limpia lista para redactar, firmar o dibujar.</div>
+                    </div>
+                    <div class="template-card" data-template="invoice">
+                        <div class="template-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <div class="template-title">A - Factura con Líneas</div>
+                        <div class="template-desc">Factura comercial estructurada con datos de emisor, cliente, tabla y totales.</div>
+                    </div>
+                    <div class="template-card" data-template="diploma">
+                        <div class="template-icon"><i class="fas fa-award"></i></div>
+                        <div class="template-title">B - Diploma de Curso</div>
+                        <div class="template-desc">Certificado de acreditación elegante en formato apaisado con marco dorado.</div>
+                    </div>
+                    <div class="template-card" data-template="sale">
+                        <div class="template-icon"><i class="fas fa-bullhorn"></i></div>
+                        <div class="template-title">C - Cartel "SE VENDE"</div>
+                        <div class="template-desc">Cartel de venta de alto impacto visual para inmuebles, vehículos o artículos.</div>
+                    </div>
+                    <div class="template-card" data-template="business-cards">
+                        <div class="template-icon"><i class="fas fa-id-card"></i></div>
+                        <div class="template-title">D - Tarjetas de Presentación</div>
+                        <div class="template-desc">Parrilla de 8 tarjetas de visita (85x55 mm) listas para imprimir y recortar.</div>
+                    </div>
+                    <div class="template-card" data-template="book-labels">
+                        <div class="template-icon"><i class="fas fa-tags"></i></div>
+                        <div class="template-title">E - Etiquetas para Libros</div>
+                        <div class="template-desc">Hoja con 6 etiquetas escolares/biblioteca para identificar asignaturas y nombres.</div>
+                    </div>
+                    <div class="template-card" data-template="qr-poster">
+                        <div class="template-icon"><i class="fas fa-qrcode"></i></div>
+                        <div class="template-title">F - Cartel con Texto y QR</div>
+                        <div class="template-desc">Poster publicitario e informativo con código QR integrado para escanear.</div>
+                    </div>
+                    <div class="template-card" data-template="mobile-wireframe">
+                        <div class="template-icon"><i class="fas fa-mobile-alt"></i></div>
+                        <div class="template-title">G - Prototipo de App Móvil</div>
+                        <div class="template-desc">Lienzo con 3 mockups/marcos de Smartphone para bocetear interfaces móviles.</div>
+                    </div>
+                    <div class="template-card" data-template="desktop-wireframe">
+                        <div class="template-icon"><i class="fas fa-desktop"></i></div>
+                        <div class="template-title">H - Prototipo App Desktop</div>
+                        <div class="template-desc">Marco de ventana de aplicación de escritorio/web con barra lateral y controles.</div>
+                    </div>
+                    <div class="template-card" data-template="job-offer">
+                        <div class="template-icon"><i class="fas fa-briefcase"></i></div>
+                        <div class="template-title">I - Oferta de Empleo</div>
+                        <div class="template-desc">Anuncio formal de vacante laboral con requisitos, condiciones, salario y contacto.</div>
+                    </div>
+                    <div class="template-card" data-template="presentation">
+                        <div class="template-icon"><i class="fas fa-file-powerpoint"></i></div>
+                        <div class="template-title">J - Presentación (3 Páginas)</div>
+                        <div class="template-desc">Juego de 3 diapositivas apaisadas en fondo blanco (Portada, Título y Texto, y Conclusiones/Contacto).</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Creating/Editing Signature -->
+    <div class="modal-backdrop" id="signature-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="font-size: 1.1rem; font-weight: 600;"><i class="fas fa-signature"></i> Crear Firma Digital</h3>
+                <button class="btn btn-secondary btn-icon btn-sm" id="btn-close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                
+                <!-- Signature Canvas -->
+                <div class="signature-canvas-container">
+                    <canvas id="signature-canvas"></canvas>
+                </div>
+
+                <!-- Tools bar -->
+                <div class="signature-tools">
+                    <div class="color-picker-group">
+                        <span>Color:</span>
+                        <div class="color-dot active" style="background-color: #000000;" data-color="#000000"></div>
+                        <div class="color-dot" style="background-color: #1d4ed8;" data-color="#1d4ed8"></div>
+                        <div class="color-dot" style="background-color: #dc2626;" data-color="#dc2626"></div>
+                        <div class="color-dot" style="background-color: #059669;" data-color="#059669"></div>
+                    </div>
+
+                    <div class="width-picker-group">
+                        <span>Grosor:</span>
+                        <button class="btn btn-secondary btn-sm" data-width="2">Fino</button>
+                        <button class="btn btn-secondary btn-sm active" data-width="4">Medio</button>
+                        <button class="btn btn-secondary btn-sm" data-width="7">Grueso</button>
+                    </div>
+
+                    <div>
+                        <button id="btn-clear-sig" class="btn btn-secondary btn-sm" title="Limpiar Canvas">
+                            <i class="fas fa-eraser"></i> Limpiar
+                        </button>
+                        <button id="btn-undo-sig" class="btn btn-secondary btn-sm" title="Deshacer trazo">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">
+                        Nombre identificativo de la firma:
+                    </label>
+                    <input type="text" id="signature-name-input" class="form-input" placeholder="Ej: Firma Principal, Iniciales..." value="Mi Firma">
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button id="btn-save-sig-local" class="btn btn-secondary">
+                    <i class="fas fa-save"></i> Guardar en localStorage
+                </button>
+                <button id="btn-use-sig-now" class="btn btn-primary">
+                    <i class="fas fa-check"></i> Usar e Insertar en PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application JS Logic -->
+    <script src="{{ url_for('static', filename='js/signature-pad.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pdf-editor.js') }}"></script>
+
+    <script>
+        // UI Wiring & localStorage Signature render integration
+        document.addEventListener('DOMContentLoaded', () => {
+            const signatureModal = document.getElementById('signature-modal');
+            const openModalBtn = document.getElementById('btn-open-signature-modal');
+            const closeModalBtn = document.getElementById('btn-close-modal');
+            const sidebarAddSigBtn = document.getElementById('btn-sidebar-add-sig');
+
+            const templateModal = document.getElementById('template-modal');
+            const closeTemplateModalBtn = document.getElementById('btn-close-template-modal');
+            const createBlankPdfBtn = document.getElementById('btn-create-blank-pdf');
+            const createBlankPdfCardBtn = document.getElementById('create-blank-pdf-card-btn');
+
+            const savedListContainer = document.getElementById('saved-signatures-list');
+
+            // Template Modal Controls
+            const openTemplateModal = (e) => {
+                if (e) e.stopPropagation();
+                templateModal?.classList.add('show');
+            };
+
+            const closeTemplateModal = () => {
+                templateModal?.classList.remove('show');
+            };
+
+            createBlankPdfBtn?.addEventListener('click', openTemplateModal);
+            createBlankPdfCardBtn?.addEventListener('click', openTemplateModal);
+            closeTemplateModalBtn?.addEventListener('click', closeTemplateModal);
+
+            // Handle Template Card Selection via Delegation
+            templateModal?.addEventListener('click', (e) => {
+                const card = e.target.closest('.template-card');
+                if (card) {
+                    const templateType = card.dataset.template;
+                    closeTemplateModal();
+                    if (window.pdfEditor) {
+                        window.pdfEditor.createFromTemplate(templateType);
+                    }
+                }
+            });
+
+            // Signature Modal controls
+            const openModal = () => {
+                signatureModal.classList.add('show');
+                window.signatureManager.resizeCanvas();
+            };
+
+            const closeModal = () => {
+                signatureModal.classList.remove('show');
+            };
+
+            openModalBtn?.addEventListener('click', openModal);
+            sidebarAddSigBtn?.addEventListener('click', openModal);
+            closeModalBtn?.addEventListener('click', closeModal);
+
+            // Color picker
+            document.querySelectorAll('.color-dot').forEach(dot => {
+                dot.addEventListener('click', (e) => {
+                    document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+                    dot.classList.add('active');
+                    window.signatureManager.setColor(dot.dataset.color);
+                });
+            });
+
+            // Width picker
+            document.querySelectorAll('.width-picker-group button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.width-picker-group button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    window.signatureManager.setWidth(parseInt(btn.dataset.width));
+                });
+            });
+
+            // Canvas action buttons
+            document.getElementById('btn-clear-sig')?.addEventListener('click', () => window.signatureManager.clear());
+            document.getElementById('btn-undo-sig')?.addEventListener('click', () => window.signatureManager.undo());
+
+            // Save signature to localStorage
+            document.getElementById('btn-save-sig-local')?.addEventListener('click', () => {
+                if (window.signatureManager.isEmpty()) {
+                    showToast('Por favor dibuja tu firma antes de guardar.', 'danger');
+                    return;
+                }
+                const nameInput = document.getElementById('signature-name-input').value.trim() || 'Firma';
+                window.signatureManager.saveToLocalStorage(nameInput);
+                renderSavedSignatures();
+                closeModal();
+                showToast('Firma guardada localmente en localStorage.', 'success');
+            });
+
+            // Use signature immediately on PDF
+            document.getElementById('btn-use-sig-now')?.addEventListener('click', () => {
+                if (window.signatureManager.isEmpty()) {
+                    showToast('Por favor dibuja tu firma primero.', 'danger');
+                    return;
+                }
+                const dataUrl = window.signatureManager.getTrimmedDataURL();
+                if (!window.pdfEditor.pdfBytes) {
+                    showToast('Primero debes cargar un archivo PDF.', 'danger');
+                    return;
+                }
+                window.pdfEditor.placeSignature(dataUrl);
+                closeModal();
+            });
+
+            // Render saved signatures from localStorage
+            function renderSavedSignatures() {
+                if (!savedListContainer) return;
+                const saved = window.signatureManager.getSavedSignatures();
+
+                if (saved.length === 0) {
+                    savedListContainer.innerHTML = `
+                        <div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 1rem 0;">
+                            No tienes firmas guardadas. Haz clic en "Nueva Firma".
+                        </div>
+                    `;
+                    return;
+                }
+
+                savedListContainer.innerHTML = '';
+                saved.forEach(sig => {
+                    const item = document.createElement('div');
+                    item.className = 'signature-item';
+
+                    item.innerHTML = `
+                        <img src="${sig.dataUrl}" alt="${sig.name}" class="signature-preview-img">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 0.8rem; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${sig.name}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">${sig.createdAt || ''}</div>
+                        </div>
+                        <div class="signature-item-actions">
+                            <button class="btn btn-primary btn-sm btn-use" title="Usar esta firma">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm btn-del" title="Eliminar de localStorage">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+
+                    // Usar firma
+                    item.querySelector('.btn-use').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (!window.pdfEditor.pdfBytes) {
+                            showToast('Por favor carga un archivo PDF primero.', 'danger');
+                            return;
+                        }
+                        window.pdfEditor.placeSignature(sig.dataUrl);
+                    });
+
+                    // Eliminar firma de localStorage
+                    item.querySelector('.btn-del').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (confirm(`¿Eliminar la firma "${sig.name}" de localStorage?`)) {
+                            window.signatureManager.deleteFromLocalStorage(sig.id);
+                            renderSavedSignatures();
+                            showToast('Firma eliminada de localStorage.', 'info');
+                        }
+                    });
+
+                    savedListContainer.appendChild(item);
+                });
+            }
+
+            // Initial render of saved signatures
+            renderSavedSignatures();
+
+            // Toggle Export PDF buttons & Undo/Redo/Revert buttons visibility when PDF loaded
+            const observer = new MutationObserver(() => {
+                const exportBtn = document.getElementById('btn-export-pdf');
+                const exportSplitBtn = document.getElementById('btn-export-split-pdf');
+                const revertBtn = document.getElementById('btn-revert-changes');
+                const undoBtn = document.getElementById('btn-undo-step');
+                const redoBtn = document.getElementById('btn-redo-step');
+                const isLoaded = !!window.pdfEditor.pdfBytes;
+                if (exportBtn) exportBtn.style.display = isLoaded ? 'inline-flex' : 'none';
+                if (exportSplitBtn) exportSplitBtn.style.display = isLoaded ? 'inline-flex' : 'none';
+                if (revertBtn) revertBtn.style.display = isLoaded ? 'inline-flex' : 'none';
+                if (undoBtn) undoBtn.style.display = isLoaded ? 'inline-flex' : 'none';
+                if (redoBtn) redoBtn.style.display = isLoaded ? 'inline-flex' : 'none';
+            });
+            const workspace = document.getElementById('editor-workspace');
+            if (workspace) {
+                observer.observe(workspace, { attributes: true, attributeFilter: ['style'] });
+            }
+        });
+    </script>
+</body>
+</html>
