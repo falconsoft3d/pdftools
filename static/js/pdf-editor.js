@@ -4567,9 +4567,12 @@ OBJETIVO: Cumplir con los hitos del proyecto y rutinas de entrenamiento
             };
 
             // Render Columns for Days
+            const topY = startY - 26;
+            const bottomY = cy + 8;
+            const usableH = topY - bottomY;
+
             dayNames.forEach((dName, cIdx) => {
                 const cx = 30 + cIdx * (colW + gap);
-                const cy = startY - colH;
 
                 // Day Column Container
                 page.drawRectangle({
@@ -4599,28 +4602,61 @@ OBJETIVO: Cumplir con los hitos del proyecto y rutinas de entrenamiento
                     color: rgb(1, 1, 1)
                 });
 
-                // Render Task Cards in Column
+                // Draw Faint Background Hour Guide Lines (09:00, 12:00, 15:00, 18:00, 21:00)
+                const hourGuides = [9, 12, 15, 18, 21];
+                hourGuides.forEach(h => {
+                    const hFrac = (h * 60 - 360) / 960;
+                    const hY = topY - (hFrac * (usableH - 24));
+                    page.drawLine({
+                        start: { x: cx + 2, y: hY },
+                        end: { x: cx + colW - 2, y: hY },
+                        thickness: 0.4,
+                        color: rgb(0.86, 0.88, 0.92)
+                    });
+                    page.drawText(`${h}:00`, {
+                        x: cx + 4,
+                        y: hY + 2,
+                        size: 6,
+                        font: fontReg,
+                        color: rgb(0.65, 0.7, 0.78)
+                    });
+                });
+
+                // Render Task Cards in Column Positioned Propatioanlly by Time
                 const tasks = dayTasks[dName] || [];
-                let taskY = startY - 32;
+                let lastCardBottomY = topY;
 
                 tasks.forEach((t) => {
-                    if (taskY < cy + 10) return;
-
                     const tLines = wrapTaskText(t.name, 14);
-                    const cardH = Math.max(26, tLines.length * 11 + (t.time ? 14 : 6));
+                    const cardH = Math.max(24, tLines.length * 11 + (t.time ? 13 : 6));
+
+                    let idealCardTopY;
+                    if (t.sortMinutes < 9999) {
+                        const clampedM = Math.max(360, Math.min(1320, t.sortMinutes));
+                        const frac = (clampedM - 360) / 960;
+                        idealCardTopY = topY - (frac * (usableH - cardH));
+                    } else {
+                        idealCardTopY = lastCardBottomY - 3;
+                    }
+
+                    // Prevent overlap with previous card
+                    let actualCardTopY = Math.min(idealCardTopY, lastCardBottomY - 2);
+                    actualCardTopY = Math.max(bottomY + cardH, actualCardTopY);
+
+                    if (actualCardTopY - cardH < bottomY) return;
 
                     page.drawRectangle({
                         x: cx + 3,
-                        y: taskY - cardH,
+                        y: actualCardTopY - cardH,
                         width: colW - 6,
                         height: cardH,
                         color: t.bgColor || rgb(1, 1, 1),
-                        borderColor: t.bgColor ? theme.primary : rgb(0.85, 0.88, 0.92),
+                        borderColor: t.bgColor ? theme.primary : rgb(0.82, 0.85, 0.9),
                         borderWidth: t.bgColor ? 1 : 0.8
                     });
 
                     // Time badge line
-                    let textY = taskY - 10;
+                    let textY = actualCardTopY - 10;
                     if (t.time) {
                         page.drawText(t.time, {
                             x: cx + 6,
@@ -4643,7 +4679,7 @@ OBJETIVO: Cumplir con los hitos del proyecto y rutinas de entrenamiento
                         textY -= 10;
                     });
 
-                    taskY -= (cardH + 4);
+                    lastCardBottomY = actualCardTopY - cardH;
                 });
             });
 
