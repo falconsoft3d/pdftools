@@ -1,9 +1,13 @@
 import os
 import io
 from flask import Flask, render_template, request, send_file, jsonify
+from werkzeug.middleware.proxy_fix import ProxyFix
 from pypdf import PdfReader, PdfWriter
 
 app = Flask(__name__)
+# Soporte para proxies inversos como Nginx para conservar HTTPS y headers
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 # Max upload size: 32MB
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
 

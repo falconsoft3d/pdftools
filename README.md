@@ -19,7 +19,7 @@ Aplicación web desarrollada con **Flask** para cargar, visualizar, editar y fir
 - Python 3.10+
 - Flask y PyPDF
 
-## � Despliegue en un solo comando
+## 🚀 Despliegue en producción con Nginx + HTTPS (1 comando)
 
 Puedes ejecutar el despliegue automático ejecutando:
 
@@ -27,7 +27,24 @@ Puedes ejecutar el despliegue automático ejecutando:
 ./deploy.sh
 ```
 
-El script detectará automáticamente si tienes **Docker** instalado para levantar el contenedor en producción o, en su defecto, iniciará el servidor WSGI **Gunicorn** en segundo plano en tu entorno local.
+El script configurará e iniciará:
+1. **Nginx** como servidor web y Proxy Inverso escuchando en los puertos **`80` (HTTP)** y **`443` (HTTPS)**.
+2. Redirección automática de todo el tráfico HTTP hacia HTTPS.
+3. Generación automática de certificados SSL iniciales si no existen en `nginx/certs/`.
+4. Contenedor **Flask + Gunicorn WSGI** en segundo plano.
+
+---
+
+### 🔒 Usar tus Certificados SSL / Certbot (Tus Dominios DNS)
+
+Para usar tus propios certificados SSL (Let's Encrypt o tu proveedor):
+1. Coloca tus archivos de certificado en el directorio `nginx/certs/`:
+   - `nginx/certs/fullchain.pem`
+   - `nginx/certs/privkey.pem`
+2. Ejecuta `./deploy.sh` o reinicia Nginx:
+   ```bash
+   docker-compose restart nginx
+   ```
 
 ---
 
