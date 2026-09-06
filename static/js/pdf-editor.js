@@ -1509,6 +1509,22 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
 - Lenguajes: Python, JavaScript, TypeScript, HTML5, CSS3, SQL
 - Herramientas: Flask, Node.js, Docker, Git, Linux, Nginx
 - Idiomas: Español (Nativo), Inglés (Avanzado C1)`;
+        } else if (type === 'gantt-chart' || type === 'gantt') {
+            return `# CRONOGRAMA DE PROYECTO / DIAGRAMA GANTT
+ESTILO: 1
+PROYECTO: Lanzamiento Plataforma PDF Tools 2026
+RESPONSABLE: Marlon Falcón Hernández
+FECHA_INICIO: 01/01/2026
+DURACION: 12 Semanas
+
+## FASES Y TAREAS
+| Tarea / Fase del Proyecto | Responsable | Inicio | Fin | Progreso |
+| 1. Análisis de Requerimientos | Equipo UX/UI | S1 | S3 | 100% |
+| 2. Diseño de Arquitectura y Base de Datos | Lead Architect | S2 | S5 | 100% |
+| 3. Desarrollo de Motor PDF y Firmas | Dev Team | S4 | S8 | 90% |
+| 4. Integración de Plantillas y Markdown | Dev Team | S6 | S10 | 85% |
+| 5. Pruebas de Rendimiento e Integración | QA Team | S8 | S11 | 50% |
+| 6. Despliegue Producción en Nginx con SSL | DevOps | S10 | S12 | 20% |`;
         } else {
             return this.getDefaultMarkdownSample();
         }
@@ -3600,6 +3616,216 @@ Ingeniero y desarrollador de software apasionado por la creación de soluciones 
         }
     }
 
+    async createGanttChartTemplate(mdText) {
+        showToast('Generando Cronograma Gantt / Timeline...', 'info');
+        try {
+            const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            const page = doc.addPage([841.89, 595.28]); // A4 Landscape
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+            const fontReg = await doc.embedFont(StandardFonts.Helvetica);
+
+            const W = 841.89;
+            const H = 595.28;
+
+            const estilo = this.getMdVal(mdText, 'ESTILO|STYLE|TIPO', '1');
+            const theme = this.getTemplateTheme(estilo);
+
+            const titulo = this.getMdVal(mdText, 'TITULO|HEADER', 'CRONOGRAMA DE PROYECTO / DIAGRAMA GANTT');
+            const proyecto = this.getMdVal(mdText, 'PROYECTO', 'Lanzamiento Plataforma PDF Tools 2026');
+            const responsable = this.getMdVal(mdText, 'RESPONSABLE|MANAGER', 'Marlon Falcón Hernández');
+            const fechaInicio = this.getMdVal(mdText, 'FECHA_INICIO|INICIO|FECHA', '01/01/2026');
+            const duracion = this.getMdVal(mdText, 'DURACION', '12 Semanas');
+
+            // Header Dark Bar
+            page.drawRectangle({
+                x: 30,
+                y: H - 90,
+                width: W - 60,
+                height: 65,
+                color: theme.headerBg
+            });
+
+            page.drawText('DIAGRAMA GANTT / TIMELINE', {
+                x: 45,
+                y: H - 48,
+                size: 9.5,
+                font: fontBold,
+                color: theme.primary
+            });
+
+            page.drawText(`${titulo}: ${proyecto}`, {
+                x: 45,
+                y: H - 70,
+                size: 13,
+                font: fontBold,
+                color: rgb(1, 1, 1)
+            });
+
+            page.drawText(`RESPONSABLE: ${responsable}`, { x: W - 270, y: H - 48, size: 9, font: fontReg, color: rgb(0.85, 0.9, 0.98) });
+            page.drawText(`FECHA INICIO: ${fechaInicio} | DURACION: ${duracion}`, { x: W - 270, y: H - 68, size: 8.5, font: fontBold, color: theme.primary });
+
+            // Layout Dimensions
+            const startY = H - 110;
+            const tableX = 30;
+            const tableW = 320;
+            const ganttX = tableX + tableW;
+            const ganttW = W - 60 - tableW; // ~431 pt
+            const numCols = 12;
+            const colW = ganttW / numCols; // ~35.9 pt per column
+
+            // Timeline Header Bar (S1 to S12 / W1 to W12)
+            const timeHeaderH = 24;
+            page.drawRectangle({
+                x: tableX,
+                y: startY - timeHeaderH,
+                width: W - 60,
+                height: timeHeaderH,
+                color: rgb(0.92, 0.94, 0.98),
+                borderColor: rgb(0.8, 0.84, 0.92),
+                borderWidth: 1
+            });
+
+            page.drawText('TAREA / FASE DEL PROYECTO', { x: tableX + 10, y: startY - 16, size: 8.5, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+            page.drawText('RESPONSABLE', { x: tableX + 185, y: startY - 16, size: 8.5, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+            page.drawText('PROG.', { x: tableX + 275, y: startY - 16, size: 8.5, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+
+            for (let c = 0; c < numCols; c++) {
+                const cx = ganttX + c * colW;
+                page.drawText(`S${c + 1}`, { x: cx + colW / 2 - 6, y: startY - 16, size: 8, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+                page.drawLine({ start: { x: cx, y: startY }, end: { x: cx, y: startY - timeHeaderH }, thickness: 0.5, color: rgb(0.8, 0.84, 0.92) });
+            }
+
+            // Parse Tasks from Markdown Table or Lines
+            const tasks = [];
+            if (mdText) {
+                const lines = mdText.split('\n');
+                lines.forEach(line => {
+                    if (line.includes('|') && !line.includes('---') && !line.toLowerCase().includes('responsable')) {
+                        const parts = line.split('|').map(p => p.trim()).filter(p => p.length > 0);
+                        if (parts.length >= 4) {
+                            tasks.push({
+                                name: parts[0] || 'Tarea',
+                                resp: parts[1] || 'Equipo',
+                                startStr: parts[2] || 'S1',
+                                endStr: parts[3] || 'S3',
+                                prog: parts[4] || '0%'
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Fallback sample tasks if none parsed
+            if (tasks.length === 0) {
+                tasks.push(
+                    { name: '1. Análisis de Requerimientos', resp: 'Equipo UX/UI', startStr: 'S1', endStr: 'S3', prog: '100%' },
+                    { name: '2. Diseño de Arquitectura', resp: 'Lead Architect', startStr: 'S2', endStr: 'S5', prog: '100%' },
+                    { name: '3. Desarrollo Motor PDF', resp: 'Dev Team', startStr: 'S4', endStr: 'S8', prog: '90%' },
+                    { name: '4. Integración de Plantillas', resp: 'Dev Team', startStr: 'S6', endStr: 'S10', prog: '85%' },
+                    { name: '5. Pruebas de Rendimiento', resp: 'QA Team', startStr: 'S8', endStr: 'S11', prog: '50%' },
+                    { name: '6. Despliegue Nginx & SSL', resp: 'DevOps', startStr: 'S10', endStr: 'S12', prog: '20%' }
+                );
+            }
+
+            const parseIndex = (str) => {
+                if (!str) return 1;
+                const num = parseInt(str.replace(/[^0-9]/g, ''));
+                return isNaN(num) ? 1 : Math.max(1, Math.min(12, num));
+            };
+
+            let rowY = startY - timeHeaderH - 28;
+            const rowH = 28;
+
+            tasks.forEach((task, idx) => {
+                if (rowY < 55) return;
+
+                const startIdx = parseIndex(task.startStr);
+                const endIdx = parseIndex(task.endStr);
+                const progNum = parseInt(task.prog.replace(/[^0-9]/g, '')) || 0;
+
+                // Alternate Row Background
+                page.drawRectangle({
+                    x: tableX,
+                    y: rowY - 5,
+                    width: W - 60,
+                    height: rowH,
+                    color: idx % 2 === 0 ? rgb(0.98, 0.99, 1) : rgb(1, 1, 1),
+                    borderColor: rgb(0.88, 0.9, 0.94),
+                    borderWidth: 0.5
+                });
+
+                // Task Name, Resp & Prog Text
+                page.drawText(task.name, { x: tableX + 8, y: rowY + 5, size: 8, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
+                page.drawText(task.resp, { x: tableX + 185, y: rowY + 5, size: 8, font: fontReg, color: rgb(0.3, 0.35, 0.45) });
+                page.drawText(task.prog, { x: tableX + 275, y: rowY + 5, size: 8, font: fontBold, color: theme.primary });
+
+                // Draw Timeline Grid Columns
+                for (let c = 0; c < numCols; c++) {
+                    const cx = ganttX + c * colW;
+                    page.drawLine({ start: { x: cx, y: rowY + 23 }, end: { x: cx, y: rowY - 5 }, thickness: 0.5, color: rgb(0.88, 0.9, 0.94) });
+                }
+
+                // Draw Gantt Bar
+                const barX = ganttX + (startIdx - 1) * colW + 2;
+                const barW = Math.max(colW - 4, (endIdx - startIdx + 1) * colW - 4);
+                const barY = rowY + 3;
+                const barH = 14;
+
+                // Outer Bar Container
+                page.drawRectangle({
+                    x: barX,
+                    y: barY,
+                    width: barW,
+                    height: barH,
+                    color: rgb(0.88, 0.92, 0.98),
+                    borderColor: theme.primary,
+                    borderWidth: 1
+                });
+
+                // Filled Progress Bar
+                if (progNum > 0) {
+                    const fillW = (barW * Math.min(100, progNum)) / 100;
+                    page.drawRectangle({
+                        x: barX,
+                        y: barY,
+                        width: fillW,
+                        height: barH,
+                        color: theme.primary
+                    });
+                }
+
+                rowY -= rowH;
+            });
+
+            // Footer Legend
+            page.drawRectangle({
+                x: tableX,
+                y: 20,
+                width: W - 60,
+                height: 22,
+                color: rgb(0.96, 0.97, 0.99),
+                borderColor: rgb(0.88, 0.9, 0.94),
+                borderWidth: 0.8
+            });
+
+            page.drawText('LEYENDA: Barra Rellena = Progreso Ejecutado  |  Barra Clara = Duración Estimada de la Tarea', {
+                x: tableX + 15,
+                y: 27,
+                size: 8,
+                font: fontReg,
+                color: rgb(0.3, 0.35, 0.45)
+            });
+
+            const bytes = await doc.save();
+            await this.loadPDFBytes(bytes, 'cronograma_gantt.pdf');
+            showToast('Cronograma Gantt / Timeline generado correctamente desde Markdown.', 'success');
+        } catch (err) {
+            console.error('Error al generar cronograma gantt:', err);
+            showToast('Error al generar el Cronograma Gantt.', 'danger');
+        }
+    }
+
     initMarkdownModal() {
         const modal = document.getElementById('markdown-modal');
         const openHeaderBtn = document.getElementById('btn-open-markdown-modal');
@@ -3878,6 +4104,9 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
             return;
         } else if (templateType === 'resume-cv') {
             await this.createResumeCvTemplate(mdText);
+            return;
+        } else if (templateType === 'gantt-chart' || templateType === 'gantt') {
+            await this.createGanttChartTemplate(mdText);
             return;
         }
 
