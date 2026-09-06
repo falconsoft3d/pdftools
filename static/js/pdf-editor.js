@@ -2945,6 +2945,7 @@ FORMA_PAGO: [X] Efectivo   [ ] Transferencia Bancaria   [ ] Tarjeta`;
             if (modalSelect) modalSelect.value = selectedType;
             const newMd = this.getMarkdownSampleForType(selectedType);
             if (sideTextarea) sideTextarea.value = newMd;
+            handleUpdate();
         });
 
         const togglePanel = (show) => {
@@ -2986,6 +2987,7 @@ FORMA_PAGO: [X] Efectivo   [ ] Transferencia Bancaria   [ ] Tarjeta`;
                     this.currentMarkdownText = text;
                     localStorage.setItem('saved_presentation_md', text);
                     showToast(`Archivo "${file.name}" cargado en el panel Markdown.`, 'success');
+                    handleUpdate();
                 };
                 reader.readAsText(file);
             }
@@ -2993,15 +2995,20 @@ FORMA_PAGO: [X] Efectivo   [ ] Transferencia Bancaria   [ ] Tarjeta`;
 
         const handleUpdate = async () => {
             const mdText = sideTextarea?.value || '';
-            if (!mdText.trim()) {
-                showToast('El contenido Markdown está vacío.', 'warning');
-                return;
-            }
+            if (!mdText.trim()) return;
             const selType = sideSelect ? sideSelect.value : (this.currentTemplateType || 'presentation');
             await this.createPDFFromMarkdown(mdText, selType);
         };
 
         updateBtn?.addEventListener('click', handleUpdate);
+
+        let debounceTimer = null;
+        sideTextarea?.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                handleUpdate();
+            }, 300);
+        });
 
         sideTextarea?.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
