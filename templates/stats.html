@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas de Aperturas - PDF Local Editor</title>
+    
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- App Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        body {
+            overflow-y: auto !important;
+        }
+
+        .stats-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .stats-grid-kpi {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .kpi-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .kpi-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            background-color: rgba(59, 130, 246, 0.15);
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.1;
+        }
+
+        .kpi-label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+
+        .stats-section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: var(--text-main);
+        }
+
+        .country-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .country-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .country-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .country-name {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .country-flag {
+            font-size: 1.25rem;
+        }
+
+        .country-count {
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .progress-bar-bg {
+            height: 10px;
+            background-color: #0f172a;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--accent-primary);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+
+        .recent-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        .recent-table th {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-weight: 600;
+            background-color: #0f172a;
+        }
+
+        .recent-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+            color: var(--text-main);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="app-header">
+        <div class="logo-container">
+            <i class="fas fa-chart-pie"></i>
+            <span>Estadísticas de Aperturas</span>
+            <span class="badge-local">
+                <i class="fas fa-shield-alt"></i> Registros de Visitas
+            </span>
+        </div>
+        <div class="header-actions">
+            <a href="/" class="btn btn-primary" style="text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> Volver al Editor PDF
+            </a>
+        </div>
+    </header>
+
+    <div class="stats-container">
+        <!-- KPI Cards -->
+        <div class="stats-grid-kpi">
+            <div class="kpi-card">
+                <div class="kpi-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">{{ stats.total_visits }}</div>
+                    <div class="kpi-label">Total de Aperturas / Visitas</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background-color: rgba(16, 185, 129, 0.15); color: var(--accent-success);">
+                    <i class="fas fa-globe-americas"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">{{ stats.total_countries }}</div>
+                    <div class="kpi-label">Países Diferentes</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background-color: rgba(245, 158, 11, 0.15); color: var(--accent-warning);">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">100% Local</div>
+                    <div class="kpi-label">Procesado sin Nube</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Country Breakdown -->
+        <div class="stats-section">
+            <div class="section-title">
+                <i class="fas fa-flag" style="color: var(--accent-primary);"></i>
+                Aperturas por Países
+            </div>
+
+            {% if stats.by_country %}
+            <div class="country-list">
+                {% for item in stats.by_country %}
+                <div class="country-item">
+                    <div class="country-info">
+                        <span class="country-name">
+                            <span class="country-flag">{{ item.flag }}</span>
+                            {{ item.country }} ({{ item.country_code }})
+                        </span>
+                        <span class="country-count">
+                            {{ item.count }} visitas ({{ item.percentage }}%)
+                        </span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: {{ item.percentage }}%;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 0.9rem;">No hay registros de países aún.</p>
+            {% endif %}
+        </div>
+
+        <!-- Recent Visits Log -->
+        <div class="stats-section">
+            <div class="section-title">
+                <i class="fas fa-history" style="color: var(--accent-success);"></i>
+                Registro de Actividad Reciente
+            </div>
+
+            <div class="table-responsive">
+                <table class="recent-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha y Hora</th>
+                            <th>País</th>
+                            <th>Dirección IP</th>
+                            <th>Navegador / Sistema</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if stats.recent_visits %}
+                        {% for visit in stats.recent_visits %}
+                        <tr>
+                            <td>{{ visit.created_at }}</td>
+                            <td>{{ visit.flag }} {{ visit.country }}</td>
+                            <td style="font-family: monospace;">{{ visit.ip }}</td>
+                            <td style="color: var(--text-muted); font-size: 0.78rem; max-width: 300px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                {{ visit.user_agent }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--text-muted);">No hay registros recientes.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
