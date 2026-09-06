@@ -276,6 +276,9 @@
                             <option value="a5">A5 (148×210 mm)</option>
                             <option value="square">Cuadrado (200×200 mm)</option>
                         </select>
+                        <button id="btn-toggle-md-side-panel" class="btn btn-secondary btn-sm" title="Abrir / Cerrar el Editor Markdown en el panel lateral para editar la presentación">
+                            <i class="fab fa-markdown" style="color: #60a5fa;"></i> Panel MD
+                        </button>
                         <button id="btn-add-blank-page" class="btn btn-secondary btn-sm" title="Añadir una página en blanco al PDF">
                             <i class="fas fa-file-circle-plus"></i> +Página
                         </button>
@@ -291,17 +294,39 @@
                     </div>
                 </div>
 
-                <!-- Canvas Viewport -->
-                <div class="viewport-container" id="viewport-container">
-                    <div id="ruler-corner" class="ruler-corner" style="display: none;"></div>
-                    <div id="ruler-horizontal" class="ruler-horizontal" style="display: none;"></div>
-                    <div id="ruler-vertical" class="ruler-vertical" style="display: none;"></div>
-                    <div class="page-container" id="page-container">
-                        <canvas id="pdf-canvas" class="pdf-canvas"></canvas>
-                        <canvas id="draw-canvas" class="draw-canvas"></canvas>
-                        <div id="grid-overlay" class="grid-overlay"></div>
-                        <div id="margins-overlay" class="margins-overlay"></div>
-                        <div id="annotation-layer" class="annotation-layer"></div>
+                <!-- Main Workspace Flex Area (Side Editor + Canvas Viewport) -->
+                <div style="display: flex; flex: 1; overflow: hidden; position: relative; width: 100%; height: calc(100% - 50px);">
+                    <!-- Side Markdown Panel -->
+                    <div id="md-side-panel" style="display: none; width: 380px; min-width: 300px; max-width: 500px; background: #0f172a; border-right: 1px solid var(--border-color); flex-direction: column; padding: 0.75rem; box-sizing: border-box; z-index: 10;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 600; font-size: 0.88rem; color: var(--text-main);"><i class="fab fa-markdown" style="color: #60a5fa;"></i> Editor Markdown (.md)</span>
+                            <div style="display: flex; gap: 0.35rem;">
+                                <button id="btn-upload-side-md-file" class="btn btn-secondary btn-icon btn-xs" title="Cargar archivo .md desde tu equipo"><i class="fas fa-file-upload"></i></button>
+                                <button id="btn-close-md-side-panel" class="btn btn-secondary btn-icon btn-xs" title="Cerrar Panel Markdown"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                        <input type="file" id="side-md-file-input" accept=".md,.markdown,.txt" style="display: none;">
+                        <textarea id="md-side-textarea" class="form-input" style="flex: 1; font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.82rem; line-height: 1.4; resize: none; margin-bottom: 0.5rem; background: #020617; border: 1px solid var(--border-color); color: var(--text-main);" placeholder="Escribe tu presentación en Markdown..."></textarea>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <button id="btn-update-from-side-md" class="btn btn-primary btn-sm" style="flex: 1;"><i class="fas fa-sync-alt"></i> Actualizar PDF (Ctrl+Enter)</button>
+                        </div>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.4rem; text-align: center;">
+                            Usa <code>---</code> para separar diapositivas.
+                        </div>
+                    </div>
+
+                    <!-- Canvas Viewport -->
+                    <div class="viewport-container" id="viewport-container">
+                        <div id="ruler-corner" class="ruler-corner" style="display: none;"></div>
+                        <div id="ruler-horizontal" class="ruler-horizontal" style="display: none;"></div>
+                        <div id="ruler-vertical" class="ruler-vertical" style="display: none;"></div>
+                        <div class="page-container" id="page-container">
+                            <canvas id="pdf-canvas" class="pdf-canvas"></canvas>
+                            <canvas id="draw-canvas" class="draw-canvas"></canvas>
+                            <div id="grid-overlay" class="grid-overlay"></div>
+                            <div id="margins-overlay" class="margins-overlay"></div>
+                            <div id="annotation-layer" class="annotation-layer"></div>
+                        </div>
                     </div>
                 </div>
 

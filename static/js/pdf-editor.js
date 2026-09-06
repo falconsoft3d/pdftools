@@ -323,8 +323,9 @@ class PDFEditor {
             window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
 
-        // Initialize Markdown Presentation modal
+        // Initialize Markdown Presentation modal & side panel
         this.initMarkdownModal();
+        this.initMarkdownSidePanel();
 
         // File upload listeners
         const dropZone = document.getElementById('drop-zone');
@@ -2687,6 +2688,7 @@ class PDFEditor {
                 showToast('El contenido Markdown está vacío.', 'warning');
                 return;
             }
+            this.currentMarkdownText = mdText;
             localStorage.setItem('saved_presentation_md', mdText);
             closeModal();
             await this.createPresentationFromMarkdown(mdText);
@@ -2694,6 +2696,77 @@ class PDFEditor {
 
         this.openMarkdownModal = openModal;
         this.closeMarkdownModal = closeModal;
+    }
+
+    initMarkdownSidePanel() {
+        const toggleBtn = document.getElementById('btn-toggle-md-side-panel');
+        const sidePanel = document.getElementById('md-side-panel');
+        const closeBtn = document.getElementById('btn-close-md-side-panel');
+        const updateBtn = document.getElementById('btn-update-from-side-md');
+        const sideTextarea = document.getElementById('md-side-textarea');
+        const uploadBtn = document.getElementById('btn-upload-side-md-file');
+        const sideFileInput = document.getElementById('side-md-file-input');
+
+        const togglePanel = (show) => {
+            if (!sidePanel) return;
+            const isVisible = sidePanel.style.display === 'flex';
+            const shouldShow = show !== undefined ? show : !isVisible;
+
+            if (shouldShow) {
+                sidePanel.style.display = 'flex';
+                toggleBtn?.classList.add('active');
+                const textToUse = this.currentMarkdownText || localStorage.getItem('saved_presentation_md') || this.getDefaultMarkdownSample();
+                if (sideTextarea) sideTextarea.value = textToUse;
+            } else {
+                sidePanel.style.display = 'none';
+                toggleBtn?.classList.remove('active');
+            }
+        };
+
+        toggleBtn?.addEventListener('click', () => togglePanel());
+        closeBtn?.addEventListener('click', () => togglePanel(false));
+
+        uploadBtn?.addEventListener('click', () => {
+            if (sideFileInput) {
+                sideFileInput.value = '';
+                sideFileInput.click();
+            }
+        });
+
+        sideFileInput?.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const text = evt.target.result;
+                    if (sideTextarea) sideTextarea.value = text;
+                    this.currentMarkdownText = text;
+                    localStorage.setItem('saved_presentation_md', text);
+                    showToast(`Archivo "${file.name}" cargado en el panel Markdown.`, 'success');
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        const handleUpdate = async () => {
+            const mdText = sideTextarea?.value || '';
+            if (!mdText.trim()) {
+                showToast('El contenido Markdown está vacío.', 'warning');
+                return;
+            }
+            await this.createPresentationFromMarkdown(mdText);
+        };
+
+        updateBtn?.addEventListener('click', handleUpdate);
+
+        sideTextarea?.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                handleUpdate();
+            }
+        });
+
+        this.toggleMarkdownSidePanel = togglePanel;
     }
 
     getDefaultMarkdownSample() {
@@ -2741,6 +2814,19 @@ Conclusion preliminar: Esta plantilla ofrece maxima legibilidad tanto para prese
         if (!mdText || !mdText.trim()) {
             showToast('El contenido Markdown está vacío.', 'warning');
             return;
+        }
+
+        this.currentMarkdownText = mdText;
+        localStorage.setItem('saved_presentation_md', mdText);
+
+        // Sync textareas if present
+        const modalTextarea = document.getElementById('md-editor-textarea');
+        if (modalTextarea && modalTextarea.value !== mdText) {
+            modalTextarea.value = mdText;
+        }
+        const sideTextarea = document.getElementById('md-side-textarea');
+        if (sideTextarea && sideTextarea.value !== mdText) {
+            sideTextarea.value = mdText;
         }
 
         showToast('Generando presentación PDF desde Markdown...', 'info');
